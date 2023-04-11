@@ -1,2 +1,2 @@
 # pqmc-framework
-basic framework of projector QMC
+basic framework of projective QMC (2d Hubbard model on square lattice)

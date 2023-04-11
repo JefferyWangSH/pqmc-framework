@@ -30,3 +30,16 @@
 *.exe
 *.out
 *.app
+
+# Personal folders and files
+.git/*
+
+.idea/*
+.vscode/*
+cmake-build-debug/*
+cmake-build-release/*
+
+build/*
+test/build/*
+!build/*.sh
+!test/build/*.sh
