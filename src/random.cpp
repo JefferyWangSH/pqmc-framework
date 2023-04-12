@@ -1,3 +1,11 @@
+/*
+ *   random.cpp
+ * 
+ *     Created on: Apr 11, 2023
+ *         Author: Jeffery Wang
+ * 
+ */
+
 #include "random.h"
 
 namespace Utils {

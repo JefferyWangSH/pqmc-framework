@@ -1,3 +1,11 @@
+/*
+ *   model.cpp
+ * 
+ *     Created on: Apr 11, 2023
+ *         Author: Jeffery Wang
+ * 
+ */
+
 #include "model.h"
 #include "pqmc_engine.h"
 #include "random.h"

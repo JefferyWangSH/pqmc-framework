@@ -1,7 +1,3 @@
-#ifndef UTILS_LINEAR_ALGEBRA_HPP
-#define UTILS_LINEAR_ALGEBRA_HPP
-#pragma once
-
 /*
  *   linear_algebra.hpp
  * 
@@ -15,6 +11,10 @@
  *     2. optimized diagonalizing algorithms for N * N real symmetric and Hermitian matrix ( dsyev and zheev )
  *   the numerical accuracy and efficiency of the calculations are guaranteed.
  */
+
+#ifndef UTILS_LINEAR_ALGEBRA_HPP
+#define UTILS_LINEAR_ALGEBRA_HPP
+#pragma once
 
 #include <iostream>
 #define EIGEN_USE_MKL_ALL

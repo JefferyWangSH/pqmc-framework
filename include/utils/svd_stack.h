@@ -1,6 +1,3 @@
-#ifndef UTILS_SVD_STACK_H
-#define UTILS_SVD_STACK_H
-
 /*
  *   svd_stack.h
  * 
@@ -11,6 +8,9 @@
  *   the stable multiplication of long chains of dense matrices.
  *   LAPACK libraries (MKL implemented) is needed for the SVD decomposition.
  */
+
+#ifndef UTILS_SVD_STACK_H
+#define UTILS_SVD_STACK_H
 
 #include <complex>
 #include <iostream>

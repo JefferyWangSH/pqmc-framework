@@ -1,3 +1,11 @@
+/*
+ *   pqmc_main.cpp
+ * 
+ *     Created on: Apr 11, 2023
+ *         Author: Jeffery Wang
+ * 
+ */
+
 #include <iostream>
 #include "model.h"
 #include "pqmc_engine.h"
@@ -64,33 +72,36 @@ int main() {
 
 
 
-    std::array<int,2> shape = { 4, 5 };
-    int max_stack_length = 10;
-    Eigen::MatrixXcd P = Eigen::MatrixXcd::Random(shape[0], shape[1]);
-    Utils::SvdStackCpx* stack = new Utils::SvdStackCpx( shape, max_stack_length, P );
+//     std::array<int,2> shape = { 4, 5 };
+//     int max_stack_length = 10;
+//     Eigen::MatrixXcd P = Eigen::MatrixXcd::Random(shape[0], shape[1]);
+//     Utils::SvdStackCpx* stack = new Utils::SvdStackCpx( shape, max_stack_length, P );
     
-    Eigen::MatrixXcd temp = P;
-    Eigen::MatrixXcd mat = Eigen::MatrixXcd::Random( shape[0], shape[0] );
-    temp = mat * mat * temp;
-    stack->push( mat );
-    stack->push( mat );
+//     Eigen::MatrixXcd temp = P;
+//     Eigen::MatrixXcd mat = Eigen::MatrixXcd::Random( shape[0], shape[0] );
+//     temp = mat * mat * temp;
+//     stack->push( mat );
+//     stack->push( mat );
 
-    std::cout << stack->MatrixU() * stack->SingularValues().asDiagonal() * stack->MatrixV().adjoint() << std::endl;
-    std::cout << "\n" << temp << std::endl;
-    std::cout << "\n" << stack->CurrentStackLength() << std::endl;
-    std::cout << ( temp - stack->MatrixU() * stack->SingularValues().asDiagonal() * stack->MatrixV().adjoint() ).cwiseAbs2().cwiseSqrt().maxCoeff() << std::endl;
+//     std::cout << stack->MatrixU() * stack->SingularValues().asDiagonal() * stack->MatrixV().adjoint() << std::endl;
+//     std::cout << "\n" << temp << std::endl;
+//     std::cout << "\n" << stack->CurrentStackLength() << std::endl;
+//     std::cout << ( temp - stack->MatrixU() * stack->SingularValues().asDiagonal() * stack->MatrixV().adjoint() ).cwiseAbs2().cwiseSqrt().maxCoeff() << std::endl;
 
-    stack->pop();
-    temp = mat.inverse() * temp;
-    std::cout << stack->MatrixU() * stack->SingularValues().asDiagonal() * stack->MatrixV().adjoint() << std::endl;
-    std::cout << "\n" << temp << std::endl;
-    std::cout << "\n" << stack->CurrentStackLength() << std::endl;
-    std::cout << ( temp - stack->MatrixU() * stack->SingularValues().asDiagonal() * stack->MatrixV().adjoint() ).cwiseAbs2().cwiseSqrt().maxCoeff() << std::endl;
-    std::cout << "\n" << stack->empty() << std::endl;
+//     stack->pop();
+//     temp = mat.inverse() * temp;
+//     std::cout << stack->MatrixU() * stack->SingularValues().asDiagonal() * stack->MatrixV().adjoint() << std::endl;
+//     std::cout << "\n" << temp << std::endl;
+//     std::cout << "\n" << stack->CurrentStackLength() << std::endl;
+//     std::cout << ( temp - stack->MatrixU() * stack->SingularValues().asDiagonal() * stack->MatrixV().adjoint() ).cwiseAbs2().cwiseSqrt().maxCoeff() << std::endl;
+//     std::cout << "\n" << stack->empty() << std::endl;
 
-    stack->pop();
-    std::cout << "\n" << stack->CurrentStackLength() << std::endl;
-    std::cout << "\n" << stack->empty() << std::endl;
+//     stack->pop();
+//     std::cout << "\n" << stack->CurrentStackLength() << std::endl;
+//     std::cout << "\n" << stack->empty() << std::endl;
+
+
+
 
 
     return 0;

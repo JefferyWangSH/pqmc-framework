@@ -1,3 +1,11 @@
+/*
+ *   model.h
+ * 
+ *     Created on: Apr 11, 2023
+ *         Author: Jeffery Wang
+ * 
+ */
+
 #ifndef MODEL_H
 #define MODEL_H
 #pragma once

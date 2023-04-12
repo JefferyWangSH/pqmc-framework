@@ -1,3 +1,11 @@
+/*
+ *   numerical_stable.hpp
+ * 
+ *     Created on: Apr 11, 2023
+ *         Author: Jeffery Wang
+ * 
+ */
+
 #ifndef UTILS_NUMERICAL_STABLE_HPP
 #define UTILS_NUMERICAL_STABLE_HPP
 #pragma once

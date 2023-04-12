@@ -1,3 +1,11 @@
+/*
+ *   random.h
+ * 
+ *     Created on: Apr 11, 2023
+ *         Author: Jeffery Wang
+ * 
+ */
+
 #ifndef UTILS_RANDOM_H
 #define UTILS_RANDOM_H
 #pragma once
