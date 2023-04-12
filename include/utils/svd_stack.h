@@ -84,9 +84,41 @@ namespace Utils {
                 : m_matrix_shape(shape), m_initial_matrix(initial_matrix)
             {
                 assert( initial_matrix.rows() == shape[0] && initial_matrix.cols() == shape[1] );
-                this->m_stack.reserve( max_stack_length );
-                for ( auto i = 0; i < max_stack_length; ++i ) {
+                this->m_stack.reserve( max_stack_length+1 );
+                for ( auto i = 0; i <= max_stack_length; ++i ) {
                     this->m_stack.emplace_back();
+                }
+
+                // initialize UDV for initial matrix, e.g. projection matrix
+                if constexpr ( std::is_same_v< ScalarType, double > ) {
+                    // SVD decomposition of real matrix
+                    Utils::LinearAlgebra::mkl_lapack_dgesvd
+                    (
+                        this->m_matrix_shape[0],
+                        this->m_matrix_shape[1],
+                        this->m_initial_matrix,
+                        this->m_stack[0].MatrixU(),
+                        this->m_stack[0].SingularValues(),
+                        this->m_stack[0].MatrixV()
+                    );
+                }
+                else if constexpr ( std::is_same_v< ScalarType, std::complex<double> > ) {
+                    // SVD decomposition of complex matrix
+                    Utils::LinearAlgebra::mkl_lapack_zgesvd
+                    (
+                        this->m_matrix_shape[0],
+                        this->m_matrix_shape[1],
+                        this->m_initial_matrix,
+                        this->m_stack[0].MatrixU(),
+                        this->m_stack[0].SingularValues(),
+                        this->m_stack[0].MatrixV()
+                    );
+                }
+                else {
+                    std::cerr << "Utils::SvdStack<ScalarType>::push(): "
+                              << "undefined scalar type."
+                              << std::endl;
+                    exit(1);   
                 }
             }
 
@@ -100,21 +132,21 @@ namespace Utils {
             // return the SVD decomposition matrices for the current stack
             const Vector SingularValues()
             {
-                assert( this->m_stack_length > 0 );
-                return this->m_stack[this->m_stack_length-1].SingularValues();
+                assert( this->m_stack_length >= 0 );
+                return this->m_stack[this->m_stack_length].SingularValues();
             }
 
             const Matrix MatrixU()
             {
-                assert( this->m_stack_length > 0 );
-                return this->m_stack[this->m_stack_length-1].MatrixU();
+                assert( this->m_stack_length >= 0 );
+                return this->m_stack[this->m_stack_length].MatrixU();
             }
 
             const Matrix MatrixV()
             {
-                assert( this->m_stack_length > 0 );
+                assert( this->m_stack_length >= 0 );
                 Matrix r = this->m_stack[0].MatrixV();
-                for ( auto i = 1; i < this->m_stack_length; ++i ) {
+                for ( auto i = 1; i <= this->m_stack_length; ++i ) {
                     r = r * this->m_stack[i].MatrixV();
                 }
                 return r;
@@ -127,82 +159,41 @@ namespace Utils {
             void push( const Matrix& matrix )
             {
                 assert( matrix.rows() == this->m_matrix_shape[0] && matrix.cols() == this->m_matrix_shape[0] );
-                assert( this->m_stack_length < (int)this->m_stack.size() );
+                assert( this->m_stack_length < (int)this->m_stack.size()-1 );
 
-                if ( this->m_stack_length == 0 ) {
+                // important: mind the order of multiplication.
+                // avoid mixing of different numerical scales here
+                this->m_temp_matrix = ( matrix * this->MatrixU() ) * this->SingularValues().asDiagonal();
 
-                    if constexpr ( std::is_same_v< ScalarType, double > ) {
-                        // SVD decomposition of real matrix
-                        Utils::LinearAlgebra::mkl_lapack_dgesvd
-                        (
-                            this->m_matrix_shape[0],
-                            this->m_matrix_shape[1],
-                            matrix * this->m_initial_matrix,
-                            this->m_stack[this->m_stack_length].MatrixU(),
-                            this->m_stack[this->m_stack_length].SingularValues(),
-                            this->m_stack[this->m_stack_length].MatrixV()
-                        );
-                    }
-
-                    else if constexpr ( std::is_same_v< ScalarType, std::complex<double> > ) {
-                        // SVD decomposition of complex matrix
-                        Utils::LinearAlgebra::mkl_lapack_zgesvd
-                        (
-                            this->m_matrix_shape[0],
-                            this->m_matrix_shape[1],
-                            matrix * this->m_initial_matrix,
-                            this->m_stack[this->m_stack_length].MatrixU(),
-                            this->m_stack[this->m_stack_length].SingularValues(),
-                            this->m_stack[this->m_stack_length].MatrixV()
-                        );
-                    }
-
-                    else {
-                        std::cerr << "Utils::SvdStack<ScalarType>::push(): "
-                                  << "undefined scalar type."
-                                  << std::endl;
-                        exit(1);   
-                    }
-
+                if constexpr ( std::is_same_v< ScalarType, double > ) {
+                    // SVD decomposition of real matrix
+                    Utils::LinearAlgebra::mkl_lapack_dgesvd
+                    (
+                        this->m_temp_matrix.rows(),
+                        this->m_temp_matrix.cols(),
+                        this->m_temp_matrix,
+                        this->m_stack[this->m_stack_length+1].MatrixU(),
+                        this->m_stack[this->m_stack_length+1].SingularValues(),
+                        this->m_stack[this->m_stack_length+1].MatrixV()
+                    );
+                }
+                else if constexpr ( std::is_same_v< ScalarType, std::complex<double> > ) {
+                    // SVD decomposition of complex matrix
+                    Utils::LinearAlgebra::mkl_lapack_zgesvd
+                    (
+                        this->m_temp_matrix.rows(),
+                        this->m_temp_matrix.cols(),
+                        this->m_temp_matrix,
+                        this->m_stack[this->m_stack_length+1].MatrixU(),
+                        this->m_stack[this->m_stack_length+1].SingularValues(),
+                        this->m_stack[this->m_stack_length+1].MatrixV()
+                    );
                 }
                 else {
-                    // important: mind the order of multiplication.
-                    // avoid mixing of different numerical scales here
-                    this->m_temp_matrix = ( matrix * this->MatrixU() ) * this->SingularValues().asDiagonal();
-
-                    if constexpr ( std::is_same_v< ScalarType, double > ) {
-                        // SVD decomposition of real matrix
-                        Utils::LinearAlgebra::mkl_lapack_dgesvd
-                        (
-                            this->m_temp_matrix.rows(),
-                            this->m_temp_matrix.cols(),
-                            this->m_temp_matrix,
-                            this->m_stack[this->m_stack_length].MatrixU(),
-                            this->m_stack[this->m_stack_length].SingularValues(),
-                            this->m_stack[this->m_stack_length].MatrixV()
-                        );
-                    }
-
-                    else if constexpr ( std::is_same_v< ScalarType, std::complex<double> > ) {
-                        // SVD decomposition of complex matrix
-                        Utils::LinearAlgebra::mkl_lapack_zgesvd
-                        (
-                            this->m_temp_matrix.rows(),
-                            this->m_temp_matrix.cols(),
-                            this->m_temp_matrix,
-                            this->m_stack[this->m_stack_length].MatrixU(),
-                            this->m_stack[this->m_stack_length].SingularValues(),
-                            this->m_stack[this->m_stack_length].MatrixV()
-                        );
-                    }
-
-                    else {
-                        std::cerr << "Utils::SvdStack<ScalarType>::push(): "
-                                  << "undefined scalar type."
-                                  << std::endl;
-                        exit(1);   
-                    }
-
+                    std::cerr << "Utils::SvdStack<ScalarType>::push(): "
+                              << "undefined scalar type."
+                              << std::endl;
+                    exit(1);   
                 }
                 this->m_stack_length += 1;
             }
