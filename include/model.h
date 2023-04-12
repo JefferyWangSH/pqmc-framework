@@ -14,7 +14,7 @@
 #define EIGEN_VECTORIZE_SSE4_2
 #include <Eigen/Core>
 
-namespace PQMC { class PqmcEngine; }
+namespace PQMC { class PqmcEngine; struct PqmcParams; }
 
 namespace Model{
 
@@ -30,13 +30,13 @@ namespace Model{
     
     class Hubbard{
         public:
-            int m_nt{80};
-            int m_nl{4};
+            int m_nt{};
+            int m_nl{};
             int m_ns{};
-            double m_dt{0.05};
+            double m_dt{};
             
-            double m_t{1.0};
-            double m_u{4.0};
+            double m_t{};
+            double m_u{};
             double m_alpha{};
             
             HoppingMat m_K{};
@@ -45,7 +45,7 @@ namespace Model{
 
             SpaceTimeLattice m_ising_fields{};
         
-            void initial();
+            void initial( const PQMC::PqmcParams& params );
             void randomly_initial_ising_fields();
 
             void update_ising_field         ( timeIndex t, spaceIndex i );

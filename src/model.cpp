@@ -7,17 +7,24 @@
  */
 
 #include "model.h"
+#include "pqmc_params.hpp"
 #include "pqmc_engine.h"
 #include "random.h"
 #include <unsupported/Eigen/MatrixFunctions>
 
 namespace Model {
 
-    void Hubbard::initial()
+    void Hubbard::initial( const PQMC::PqmcParams& params )
     {
-        this->m_ns = this->m_nl * this->m_nl;
+        this->m_nt = params.nt;
+        this->m_nl = params.nl;
+        this->m_ns = params.nl * params.nl;
+        this->m_dt = params.dt;
+
+        this->m_t = params.t;
+        this->m_u = params.u;
         this->m_alpha = std::acosh( std::exp(0.5 * this->m_dt * this->m_u) );
-        this->m_ising_fields.resize( this->m_nt, this->m_nl*this->m_nl );
+        this->m_ising_fields.resize( this->m_nt, this->m_ns );
 
         this->m_K.resize( this->m_ns, this->m_ns );
         this->m_K.setZero();
@@ -53,8 +60,8 @@ namespace Model {
 
     void Hubbard::update_greens_function( PQMC::PqmcEngine& engine, timeIndex t, spaceIndex i )
     {
-        GreensFunction& green_tt_up = engine.m_green_tt_up;
-        GreensFunction& green_tt_dn = engine.m_green_tt_dn;
+        GreensFunction& green_tt_up = *engine.m_green_tt_up;
+        GreensFunction& green_tt_dn = *engine.m_green_tt_dn;
 
         const double factor_up = ( std::exp( -2*this->m_alpha*this->m_ising_fields(t,i) ) - 1 )
                                / ( 1 + ( 1-green_tt_up(i,i) ) * ( std::exp( -2*this->m_alpha*this->m_ising_fields(t,i) ) - 1 ) );
@@ -67,8 +74,8 @@ namespace Model {
 
     const double Hubbard::get_updating_ratio( const PQMC::PqmcEngine& engine, timeIndex t, spaceIndex i, spinIndex s ) const
     {
-        const GreensFunction& green_tt_up = engine.m_green_tt_up;
-        const GreensFunction& green_tt_dn = engine.m_green_tt_dn;
+        const GreensFunction& green_tt_up = *engine.m_green_tt_up;
+        const GreensFunction& green_tt_dn = *engine.m_green_tt_dn;
         return  ( 1 + ( 1-green_tt_up(i,i) ) * ( std::exp( -2*this->m_alpha*this->m_ising_fields(t,i) ) - 1 ) )
               * ( 1 + ( 1-green_tt_dn(i,i) ) * ( std::exp( +2*this->m_alpha*this->m_ising_fields(t,i) ) - 1 ) );
     }

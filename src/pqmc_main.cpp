@@ -7,29 +7,42 @@
  */
 
 #include <iostream>
+#include <Eigen/Dense>
 #include "model.h"
 #include "pqmc_engine.h"
+#include "pqmc_params.hpp"
 #include "random.h"
-#include "utils/numerical_stable.hpp"
-#include "utils/linear_algebra.hpp"
-#include "utils/svd_stack.h"
+// #include "utils/numerical_stable.hpp"
+// #include "utils/linear_algebra.hpp"
+// #include "utils/svd_stack.h"
 
 int main() {
 
-    // Model::Hubbard* hubbard = new Model::Hubbard();
-    // PQMC::PqmcEngine* engine = new PQMC::PqmcEngine();
+    Model::Hubbard* hubbard = new Model::Hubbard();
+    PQMC::PqmcEngine* engine = new PQMC::PqmcEngine();
 
-    // Utils::Random::set_seed( time(nullptr) );
-    // hubbard->initial();
-    // // std::cout << hubbard->m_K << std::endl;
-    // // std::cout << hubbard->m_expK << std::endl;
+    PQMC::PqmcParams* params = new PQMC::PqmcParams();
+    params->nl = 4;
+    params->np = params->nl*params->nl;    // half-filling
+    params->nt = 80;
+    params->dt = 0.05;
+    params->theta = 4.0;
+    params->t = 1.0;
+    params->u = 4.0;
+    params->stabilization_pace = 10;
+
+    Utils::Random::set_seed( time(nullptr) );
+    hubbard->initial( *params );
+    // std::cout << hubbard->m_K << std::endl;
+    // std::cout << hubbard->m_expK << std::endl;
     
-    // hubbard->randomly_initial_ising_fields();
-    // // std::cout << "\n" << hubbard->m_ising_fields << std::endl;
+    hubbard->randomly_initial_ising_fields();
+    // std::cout << "\n" << hubbard->m_ising_fields << std::endl;
 
 
-    // engine->initial( *hubbard );
+    engine->initial( *params, *hubbard );
     // std::cout << engine->m_projection_mat << std::endl;
+    std::cout << *(engine->m_green_tt_up) << std::endl;
 
 
 
@@ -73,7 +86,7 @@ int main() {
 
 
 //     std::array<int,2> shape = { 4, 5 };
-//     int max_stack_length = 10;
+//     int max_stack_length = 2;
 //     Eigen::MatrixXcd P = Eigen::MatrixXcd::Random(shape[0], shape[1]);
 //     Utils::SvdStackCpx* stack = new Utils::SvdStackCpx( shape, max_stack_length, P );
     
