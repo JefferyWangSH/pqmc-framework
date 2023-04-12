@@ -26,10 +26,10 @@ namespace PQMC {
             this->m_projection_mat.col(i) = eigensolver.eigenvectors().col(i);
         }
 
-        this->m_svd_stack_left_up  = new Utils::SvdStackReal( this->m_ns, this->m_nt );
-        this->m_svd_stack_left_dn  = new Utils::SvdStackReal( this->m_ns, this->m_nt );
-        this->m_svd_stack_right_up = new Utils::SvdStackReal( this->m_ns, this->m_nt );
-        this->m_svd_stack_right_dn = new Utils::SvdStackReal( this->m_ns, this->m_nt );
+        // this->m_svd_stack_left_up  = new Utils::SvdStackReal( this->m_ns, this->m_nt );
+        // this->m_svd_stack_left_dn  = new Utils::SvdStackReal( this->m_ns, this->m_nt );
+        // this->m_svd_stack_right_up = new Utils::SvdStackReal( this->m_ns, this->m_nt );
+        // this->m_svd_stack_right_dn = new Utils::SvdStackReal( this->m_ns, this->m_nt );
     
 
 

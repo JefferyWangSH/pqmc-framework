@@ -4,6 +4,7 @@
 #include "random.h"
 #include "utils/numerical_stable.hpp"
 #include "utils/linear_algebra.hpp"
+#include "utils/svd_stack.h"
 
 int main() {
 
@@ -45,19 +46,52 @@ int main() {
 //     std::cout << "\n" << (mat-u * s.asDiagonal() * v.adjoint()).cwiseAbs2().cwiseSqrt().maxCoeff() << std::endl;
 
 
-    int n = 4;
-    Eigen::MatrixXcd mat1 = Eigen::MatrixXcd::Random( n, n );
-    Eigen::MatrixXcd mat2 = mat1 + mat1.adjoint();
-    Eigen::MatrixXcd t;
-    Eigen::VectorXd s;
+//     int n = 4;
+//     Eigen::MatrixXcd mat1 = Eigen::MatrixXcd::Random( n, n );
+//     Eigen::MatrixXcd mat2 = mat1 + mat1.adjoint();
+//     Eigen::MatrixXcd t;
+//     Eigen::VectorXd s;
 
-    Utils::LinearAlgebra::mkl_lapack_zheev( n, mat2, s, t );
+//     Utils::LinearAlgebra::mkl_lapack_zheev( n, mat2, s, t );
 
-    std::cout << t.adjoint() * s.asDiagonal() * t << std::endl;
-    std::cout << s << std::endl;
-    std::cout << "\n" << t << std::endl;
-    std::cout << "\n" << mat2 << std::endl;
-    std::cout << (mat2 - t.adjoint() * s.asDiagonal() * t).cwiseAbs2().cwiseSqrt().maxCoeff() << std::endl;
+//     std::cout << t.adjoint() * s.asDiagonal() * t << std::endl;
+//     std::cout << s << std::endl;
+//     std::cout << "\n" << t << std::endl;
+//     std::cout << "\n" << mat2 << std::endl;
+//     std::cout << (mat2 - t.adjoint() * s.asDiagonal() * t).cwiseAbs2().cwiseSqrt().maxCoeff() << std::endl;
+
+
+
+
+
+    std::array<int,2> shape = { 4, 5 };
+    int max_stack_length = 10;
+    Eigen::MatrixXcd P = Eigen::MatrixXcd::Random(shape[0], shape[1]);
+    Utils::SvdStackCpx* stack = new Utils::SvdStackCpx( shape, max_stack_length, P );
+    
+    Eigen::MatrixXcd temp = P;
+    Eigen::MatrixXcd mat = Eigen::MatrixXcd::Random( shape[0], shape[0] );
+    temp = mat * mat * temp;
+    stack->push( mat );
+    stack->push( mat );
+
+    std::cout << stack->MatrixU() * stack->SingularValues().asDiagonal() * stack->MatrixV().adjoint() << std::endl;
+    std::cout << "\n" << temp << std::endl;
+    std::cout << "\n" << stack->CurrentStackLength() << std::endl;
+    std::cout << ( temp - stack->MatrixU() * stack->SingularValues().asDiagonal() * stack->MatrixV().adjoint() ).cwiseAbs2().cwiseSqrt().maxCoeff() << std::endl;
+
+    stack->pop();
+    temp = mat.inverse() * temp;
+    std::cout << stack->MatrixU() * stack->SingularValues().asDiagonal() * stack->MatrixV().adjoint() << std::endl;
+    std::cout << "\n" << temp << std::endl;
+    std::cout << "\n" << stack->CurrentStackLength() << std::endl;
+    std::cout << ( temp - stack->MatrixU() * stack->SingularValues().asDiagonal() * stack->MatrixV().adjoint() ).cwiseAbs2().cwiseSqrt().maxCoeff() << std::endl;
+    std::cout << "\n" << stack->empty() << std::endl;
+
+    stack->pop();
+    std::cout << "\n" << stack->CurrentStackLength() << std::endl;
+    std::cout << "\n" << stack->empty() << std::endl;
+
 
     return 0;
 }

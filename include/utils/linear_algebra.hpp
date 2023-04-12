@@ -3,7 +3,7 @@
 #pragma once
 
 /*
- *   linear_algebra.h
+ *   linear_algebra.hpp
  * 
  *     Created on: Apr 12, 2023
  *         Author: Jeffery Wang
