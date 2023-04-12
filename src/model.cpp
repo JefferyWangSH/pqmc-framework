@@ -1,4 +1,5 @@
 #include "model.h"
+#include "pqmc_engine.h"
 #include "random.h"
 #include <unsupported/Eigen/MatrixFunctions>
 
@@ -11,6 +12,7 @@ namespace Model {
         this->m_ising_fields.resize( this->m_nt, this->m_nl*this->m_nl );
 
         this->m_K.resize( this->m_ns, this->m_ns );
+        this->m_K.setZero();
         for ( int x = 0; x < this->m_nl; ++x ) {
             for ( int y = 0; y < this->m_nl; ++y ) {
                 const int i = x + y * this->m_nl;
@@ -26,7 +28,7 @@ namespace Model {
         this->m_inv_expK = ( +this->m_dt * this->m_K ).exp();
     }
 
-    void Hubbard::set_ising_fields_to_random()
+    void Hubbard::randomly_initial_ising_fields()
     {
         std::bernoulli_distribution bernoulli_dist(0.5);
         for ( auto t = 0; t < this->m_nt; ++t ) {
@@ -41,14 +43,26 @@ namespace Model {
         this->m_ising_fields(t, i) = - this->m_ising_fields(t, i);
     }
 
-    void Hubbard::update_greens_function( timeIndex t, spaceIndex i, spinIndex s )
+    void Hubbard::update_greens_function( PQMC::PqmcEngine& engine, timeIndex t, spaceIndex i )
     {
+        GreensFunction& green_tt_up = engine.m_green_tt_up;
+        GreensFunction& green_tt_dn = engine.m_green_tt_dn;
 
+        const double factor_up = ( std::exp( -2*this->m_alpha*this->m_ising_fields(t,i) ) - 1 )
+                               / ( 1 + ( 1-green_tt_up(i,i) ) * ( std::exp( -2*this->m_alpha*this->m_ising_fields(t,i) ) - 1 ) );
+        const double factor_dn = ( std::exp( +2*this->m_alpha*this->m_ising_fields(t,i) ) - 1 )
+                               / ( 1 + ( 1-green_tt_dn(i,i) ) * ( std::exp( +2*this->m_alpha*this->m_ising_fields(t,i) ) - 1 ) );
+
+        green_tt_up -= factor_up * green_tt_up.col(i) * ( Eigen::VectorXd::Unit(this->m_ns, i).transpose() - green_tt_up.row(i) );
+        green_tt_dn -= factor_dn * green_tt_dn.col(i) * ( Eigen::VectorXd::Unit(this->m_ns, i).transpose() - green_tt_dn.row(i) );
     }
 
-    const double Hubbard::get_update_ratio ( timeIndex t, spaceIndex i, spinIndex s ) const
+    const double Hubbard::get_updating_ratio( const PQMC::PqmcEngine& engine, timeIndex t, spaceIndex i, spinIndex s ) const
     {
-
+        const GreensFunction& green_tt_up = engine.m_green_tt_up;
+        const GreensFunction& green_tt_dn = engine.m_green_tt_dn;
+        return  ( 1 + ( 1-green_tt_up(i,i) ) * ( std::exp( -2*this->m_alpha*this->m_ising_fields(t,i) ) - 1 ) )
+              * ( 1 + ( 1-green_tt_dn(i,i) ) * ( std::exp( +2*this->m_alpha*this->m_ising_fields(t,i) ) - 1 ) );
     }
 
     void Hubbard::multiply_B_from_left( GreensFunction& green, timeIndex t, spinIndex s ) const

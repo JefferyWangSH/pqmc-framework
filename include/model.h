@@ -6,6 +6,8 @@
 #define EIGEN_VECTORIZE_SSE4_2
 #include <Eigen/Core>
 
+namespace PQMC { class PqmcEngine; }
+
 namespace Model{
 
     using HoppingMat       = Eigen::MatrixXd;
@@ -36,11 +38,11 @@ namespace Model{
             SpaceTimeLattice m_ising_fields{};
         
             void initial();
-            void set_ising_fields_to_random();
+            void randomly_initial_ising_fields();
 
-            void update_ising_field       ( timeIndex t, spaceIndex i );
-            void update_greens_function   ( timeIndex t, spaceIndex i, spinIndex s );
-            const double get_update_ratio ( timeIndex t, spaceIndex i, spinIndex s ) const ;
+            void update_ising_field         ( timeIndex t, spaceIndex i );
+            void update_greens_function     ( PQMC::PqmcEngine& engine, timeIndex t, spaceIndex i );
+            const double get_updating_ratio ( const PQMC::PqmcEngine& engine, timeIndex t, spaceIndex i, spinIndex s ) const ;
 
             void multiply_B_from_left       ( GreensFunction& green, timeIndex t, spinIndex s ) const ;
             void multiply_B_from_right      ( GreensFunction& green, timeIndex t, spinIndex s ) const ;

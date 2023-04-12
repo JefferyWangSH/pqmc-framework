@@ -3,7 +3,7 @@ cmake_minimum_required( VERSION 3.21 )
 project( pqmc_framework )
 set( CMAKE_CXX_STANDARD 17 )
 set( CMAKE_CXX_STANDARD_REQUIRED ON )
-set( CMAKE_CXX_FLAGS "-march=native -O3 -fopenmp" )
+set( CMAKE_CXX_FLAGS "-march=native -O3 -fopenmp -Wall" )
 list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" )
 
 # target
