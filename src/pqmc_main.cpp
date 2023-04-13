@@ -10,9 +10,10 @@
 #include <Eigen/Dense>
 #include "model.h"
 #include "pqmc_engine.h"
+#include "pqmc_walker.h"
 #include "pqmc_params.hpp"
 #include "random.h"
-#include "utils/numerical_stable.hpp"
+// #include "utils/numerical_stable.hpp"
 // #include "utils/linear_algebra.hpp"
 // #include "utils/svd_stack.h"
 
@@ -22,14 +23,18 @@ int main() {
     PQMC::PqmcEngine* engine = new PQMC::PqmcEngine();
 
     PQMC::PqmcParams* params = new PQMC::PqmcParams();
-    params->nl = 2;
+    params->nl = 4;
     params->np = params->nl*params->nl;    // half-filling
-    params->nt = 10;
-    params->dt = 0.1;
-    params->theta = 0.5;
+    params->nt = 80;
+    params->dt = 0.05;
+    params->theta = 2.0;
     params->t = 1.0;
     params->u = 4.0;
-    params->stabilization_pace = 1;
+    params->stabilization_pace = 10;
+    params->sweeps_warmup = 1000;
+    params->bin_num = 100;
+    params->bin_capacity = 20;
+    params->sweeps_between_bins = 20;
 
     Utils::Random::set_seed( time(nullptr) );
     hubbard->initial( *params );
@@ -40,23 +45,57 @@ int main() {
     // std::cout << "\n" << hubbard->m_ising_fields << std::endl;
 
 
-    engine->initial( *params, *hubbard );
-    // std::cout << engine->m_projection_mat << std::endl;
-    // std::cout << *(engine->m_green_tt_up) << std::endl;
+    engine->initial( *params, *hubbard );    
+//     engine->metropolis_update( *hubbard, params->nt-1 );
+//     Eigen::MatrixXd mat1 = *(engine->m_green_tt_up);
     
-//     engine->metropolis_update( *hubbard, 0 );
-    hubbard->update_ising_field( params->nt, 0 );
-    hubbard->update_greens_function( *engine, params->nt, 0 );
-    Eigen::MatrixXd mat1 = *(engine->m_green_tt_up);
+//     for ( auto i = 0; i < 10; ++i ) {
+//         engine->sweep_from_0_to_2theta( *hubbard );
+//         engine->sweep_from_2theta_to_0( *hubbard );
+//     }
+    PQMC::PqmcWalker::thermalize( *engine, *hubbard );
+    std::cout << engine->m_wrap_error << std::endl;
     
-    delete engine;
-    engine = new PQMC::PqmcEngine();
-    engine->initial( *params, *hubbard );
-    Eigen::MatrixXd mat2 = *(engine->m_green_tt_up);
+//     PQMC::PqmcEngine* engine2 = new PQMC::PqmcEngine();
+//     engine2->initial( *params, *hubbard );
+//     Eigen::MatrixXd mat2 = *(engine2->m_green_tt_up);
     
-    std::cout << mat1 << std::endl;
-    std::cout << "\n" << mat2 << std::endl;
-    std::cout << (mat1 - mat2).maxCoeff() << std::endl;
+//     std::cout << mat1 << std::endl;
+//     std::cout << "\n" << mat2 << std::endl;
+//     std::cout << (mat1 - mat2).maxCoeff() << std::endl;
+
+//     engine->wrap_from_2theta_to_0( *model, params->nt-1 );
+//     Eigen::MatrixXd mat2 = *(engine->m_green_tt_up);
+    
+
+
+
+
+
+//     int ns = 4;
+//     int np = 2;
+//     Eigen::MatrixXd R = Eigen::MatrixXd::Random(ns, np);
+//     Eigen::MatrixXd L = Eigen::MatrixXd::Random(np, ns);
+//     int i = 0;
+//     double deltaii = 1.0;
+//     Eigen::MatrixXd Delta = deltaii * Eigen::VectorXd::Unit(ns, i).asDiagonal();
+    
+//     Eigen::MatrixXd ident = Eigen::MatrixXd::Identity(ns, ns);
+//     Eigen::MatrixXd gtt1 = ident - R * (L*R).inverse() * L;
+//     Eigen::MatrixXd gtt2 = ident - (ident+Delta) * R * (L*(ident+Delta)*R).inverse() * L;
+    
+//     Eigen::MatrixXd gtt3 = gtt1 - deltaii / (1+deltaii*(1-gtt1(i,i))) * gtt1.col(i) * (Eigen::Matrix<double,1,Eigen::Dynamic>::Unit(ns,i)-gtt1.row(i));
+//     std::cout << gtt2 << std::endl;
+//     std::cout << "\n" << gtt3 << std::endl;
+//     std::cout << "\n" << (gtt3-gtt2).maxCoeff() << std::endl;
+
+
+
+
+
+
+
+
 
 
 //     Eigen::MatrixXd mat = Eigen::MatrixXd::Identity(params->nl*params->nl,params->nl*params->nl);
@@ -74,22 +113,22 @@ int main() {
 
 
 
-//     Utils::SvdStackReal left({params->nl*params->nl,params->np/2}, params->nt+1, engine->m_projection_mat);
-//     Utils::SvdStackReal right({params->nl*params->nl,params->np/2}, params->nt+1, engine->m_projection_mat);
-//     for ( auto t = params->nt; t >= 1; --t ) {
+//     Utils::SvdStackReal left({params->nl*params->nl,params->np/2}, params->nt, engine->m_projection_mat);
+//     Utils::SvdStackReal right({params->nl*params->nl,params->np/2}, params->nt, engine->m_projection_mat);
+//     for ( auto t = 0; t < params->nt-1; ++t ) {
 //         Eigen::MatrixXd mat = Eigen::MatrixXd::Identity(params->nl*params->nl,params->nl*params->nl);
-//         hubbard->multiply_transB_from_left( mat, t, +1 );
-//         left.push( mat );
+//         hubbard->multiply_B_from_left( mat, t, -1 );
+//         right.push( mat );
 //     }
 //     Eigen::MatrixXd mat2 = Eigen::MatrixXd::Identity(params->nl*params->nl,params->nl*params->nl);
-//     hubbard->multiply_B_from_left( mat2, 0, +1 );
-//     right.push(mat2);
+//     hubbard->multiply_transB_from_left( mat2, params->nt-1, -1 );
+//     left.push(mat2);
 
 //     Eigen::MatrixXd gtt = Eigen::MatrixXd::Identity(params->nl*params->nl,params->nl*params->nl);
 //     Utils::NumericalStable::compute_equaltime_greens<PQMC::PqmcEngine>( left, right, gtt );
     
-//     engine->wrap_from_0_to_2theta( *hubbard, 0 );
-//     std::cout << ( gtt - *(engine->m_green_tt_up) ).maxCoeff() << std::endl;
+//     engine->wrap_from_2theta_to_0( *hubbard, params->nt-1 );
+//     std::cout << ( gtt - *(engine->m_green_tt_dn) ).maxCoeff() << std::endl;
 
 
 

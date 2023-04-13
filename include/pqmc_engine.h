@@ -36,7 +36,7 @@ namespace PQMC {
             int    m_ns{};
             int    m_np{};
             int    m_stabilization_pace{};
-            int    m_current_time_slice{};
+            int    m_current_time_slice{0};      // ranging from 0 to nt
 
             GreensFunction* m_green_tt_up{};
             GreensFunction* m_green_tt_dn{};

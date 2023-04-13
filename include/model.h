@@ -45,19 +45,22 @@ namespace Model{
             HoppingMat m_inv_expK{};
 
             SpaceTimeLattice m_ising_fields{};
+
+            double m_delta_up{};
+            double m_delta_dn{};
         
             void initial( const PQMC::PqmcParams& params );
             void randomly_initial_ising_fields();
 
-            void update_ising_field         ( timeIndex t, spaceIndex i );
-            void update_greens_function     ( PQMC::PqmcEngine& engine, timeIndex t, spaceIndex i );
-            const double get_updating_ratio ( const PQMC::PqmcEngine& engine, timeIndex t, spaceIndex i ) const ;
+            void update_ising_field          ( timeIndex t, spaceIndex i );
+            void update_greens_function      ( PQMC::PqmcEngine& engine, timeIndex t, spaceIndex i );
+            const double get_accepting_ratio ( const PQMC::PqmcEngine& engine, timeIndex t, spaceIndex i ) const ;
 
-            void multiply_B_from_left       ( GreensFunction& green, timeIndex t, spinIndex s ) const ;
-            void multiply_B_from_right      ( GreensFunction& green, timeIndex t, spinIndex s ) const ;
-            void multiply_invB_from_left    ( GreensFunction& green, timeIndex t, spinIndex s ) const ;
-            void multiply_invB_from_right   ( GreensFunction& green, timeIndex t, spinIndex s ) const ;
-            void multiply_transB_from_left  ( GreensFunction& green, timeIndex t, spinIndex s ) const ;
+            void multiply_B_from_left        ( GreensFunction& green, timeIndex t, spinIndex s ) const ;
+            void multiply_B_from_right       ( GreensFunction& green, timeIndex t, spinIndex s ) const ;
+            void multiply_invB_from_left     ( GreensFunction& green, timeIndex t, spinIndex s ) const ;
+            void multiply_invB_from_right    ( GreensFunction& green, timeIndex t, spinIndex s ) const ;
+            void multiply_transB_from_left   ( GreensFunction& green, timeIndex t, spinIndex s ) const ;
     };
 
 } // namespace Model

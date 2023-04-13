@@ -27,9 +27,9 @@ namespace Model {
         this->m_u = params.u;
         this->m_alpha = std::acosh( std::exp(0.5 * this->m_dt * this->m_u) );
         // open boundary in imaginary-time direction
-        //   t = 0, ..., dt*nt(=2theta).
-        // nt+1 time slices in total.
-        this->m_ising_fields.resize( this->m_nt+1, this->m_ns );
+        //   t = dt, ..., dt*nt(=2theta).
+        // nt time slices in total.
+        this->m_ising_fields.resize( this->m_nt, this->m_ns );
 
         this->m_K.resize( this->m_ns, this->m_ns );
         this->m_K.setZero();
@@ -51,7 +51,7 @@ namespace Model {
     void Hubbard::randomly_initial_ising_fields()
     {
         std::bernoulli_distribution bernoulli_dist(0.5);
-        for ( auto t = 0; t <= this->m_nt; ++t ) {
+        for ( auto t = 0; t < this->m_nt; ++t ) {
             for ( auto i = 0; i < this->m_ns; ++i ) {
                 this->m_ising_fields(t, i) = bernoulli_dist( Utils::Random::Engine )? +1.0 : -1.0;
             }
@@ -60,30 +60,30 @@ namespace Model {
 
     void Hubbard::update_ising_field( timeIndex t, spaceIndex i )
     {
-        assert( t >= 0 && t <= this->m_nt );
+        assert( t >= 0 && t < this->m_nt );
         assert( i >= 0 && i < this->m_ns );
         this->m_ising_fields(t, i) = - this->m_ising_fields(t, i);
     }
 
     void Hubbard::update_greens_function( PQMC::PqmcEngine& engine, timeIndex t, spaceIndex i )
     {
-        assert( t >= 0 && t <= this->m_nt );
+        assert( t >= 0 && t < this->m_nt );
         assert( i >= 0 && i < this->m_ns );
         GreensFunction& green_tt_up = *engine.m_green_tt_up;
         GreensFunction& green_tt_dn = *engine.m_green_tt_dn;
 
-        const double factor_up = ( std::exp( -2*this->m_alpha*this->m_ising_fields(t,i) ) - 1 )
-                               / ( 1 + ( 1-green_tt_up(i,i) ) * ( std::exp( -2*this->m_alpha*this->m_ising_fields(t,i) ) - 1 ) );
-        const double factor_dn = ( std::exp( +2*this->m_alpha*this->m_ising_fields(t,i) ) - 1 )
-                               / ( 1 + ( 1-green_tt_dn(i,i) ) * ( std::exp( +2*this->m_alpha*this->m_ising_fields(t,i) ) - 1 ) );
+        this->m_delta_up = std::exp( -2*this->m_alpha*this->m_ising_fields(t,i) ) - 1;
+        this->m_delta_dn = std::exp( +2*this->m_alpha*this->m_ising_fields(t,i) ) - 1;
+        const double factor_up = this->m_delta_up / ( 1 + ( 1-green_tt_up(i,i) ) * this->m_delta_up );
+        const double factor_dn = this->m_delta_dn / ( 1 + ( 1-green_tt_dn(i,i) ) * this->m_delta_dn );
 
         green_tt_up -= factor_up * green_tt_up.col(i) * ( RowVector::Unit(this->m_ns, i) - green_tt_up.row(i) );
         green_tt_dn -= factor_dn * green_tt_dn.col(i) * ( RowVector::Unit(this->m_ns, i) - green_tt_dn.row(i) );
     }
 
-    const double Hubbard::get_updating_ratio( const PQMC::PqmcEngine& engine, timeIndex t, spaceIndex i ) const
+    const double Hubbard::get_accepting_ratio( const PQMC::PqmcEngine& engine, timeIndex t, spaceIndex i ) const
     {
-        assert( t >= 0 && t <= this->m_nt );
+        assert( t >= 0 && t < this->m_nt );
         assert( i >= 0 && i < this->m_ns );
         const GreensFunction& green_tt_up = *engine.m_green_tt_up;
         const GreensFunction& green_tt_dn = *engine.m_green_tt_dn;
@@ -93,7 +93,7 @@ namespace Model {
 
     void Hubbard::multiply_B_from_left( GreensFunction& green, timeIndex t, spinIndex s ) const
     {
-        assert( t >= 0 && t <= this->m_nt );
+        assert( t >= 0 && t < this->m_nt );
         green = this->m_expK * green;
         for ( auto i = 0; i < this->m_ns; ++i ) {
             green.row(i) *= std::exp( +s * this->m_alpha * this->m_ising_fields(t, i) );
@@ -102,7 +102,7 @@ namespace Model {
 
     void Hubbard::multiply_B_from_right( GreensFunction& green, timeIndex t, spinIndex s ) const
     {
-        assert( t >= 0 && t <= this->m_nt );
+        assert( t >= 0 && t < this->m_nt );
         for ( auto i = 0; i < this->m_ns; ++i ) {
             green.col(i) *= std::exp( +s * this->m_alpha * this->m_ising_fields(t, i) );
         }
@@ -111,7 +111,7 @@ namespace Model {
 
     void Hubbard::multiply_invB_from_left( GreensFunction& green, timeIndex t, spinIndex s ) const
     {
-        assert( t >= 0 && t <= this->m_nt );
+        assert( t >= 0 && t < this->m_nt );
         for ( auto i = 0; i < this->m_ns; ++i ) {
             green.row(i) *= std::exp( -s * this->m_alpha * this->m_ising_fields(t, i) );
         }
@@ -120,7 +120,7 @@ namespace Model {
 
     void Hubbard::multiply_invB_from_right( GreensFunction& green, timeIndex t, spinIndex s ) const
     {
-        assert( t >= 0 && t <= this->m_nt );
+        assert( t >= 0 && t < this->m_nt );
         green = green * this->m_inv_expK;
         for ( auto i = 0; i < this->m_ns; ++i ) {
             green.col(i) *= std::exp( -s * this->m_alpha * this->m_ising_fields(t, i) );
@@ -129,10 +129,11 @@ namespace Model {
 
     void Hubbard::multiply_transB_from_left( GreensFunction& green, timeIndex t, spinIndex s ) const
     {
-        assert( t >= 0 && t <= this->m_nt );
+        assert( t >= 0 && t < this->m_nt );
         for ( auto i = 0; i < this->m_ns; ++i ) {
             green.row(i) *= std::exp( +s * this->m_alpha * this->m_ising_fields(t, i) );
         }
+        // since K is symmetric, the exponential of K is also symmetric.
         green = this->m_expK * green;
     }
 
