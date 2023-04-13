@@ -24,26 +24,44 @@ namespace Utils {
 
     class NumericalStable {
         public:
-            using Matrix   = Eigen::MatrixXd;
-            using SvdStack = SvdStackReal;
 
-            template<class T>
-            static void compute_equaltime_greens( SvdStack& left, SvdStack& right, Matrix &gtt ){};
+            template<typename ScalarType>
+            using Matrix = Eigen::Matrix<ScalarType, Eigen::Dynamic, Eigen::Dynamic>;
+
+            template <class QmcEngine, typename ScalarType>
+            static void compute_equaltime_greens( SvdStack<ScalarType>& left, SvdStack<ScalarType>& right, Matrix<ScalarType>& gtt )
+            {
+                if constexpr ( std::is_same_v< QmcEngine, PQMC::PqmcEngine > ) {
+                    // define L = P^\dag B(2\theta,t) = VSU^\dag ;
+                    //        R = B(t,0) P = USV^\dag .
+                    // L, R are in general rectangular matrices
+
+                    if constexpr ( std::is_same_v< ScalarType, double > ) {
+                        gtt = Matrix<double>::Identity(gtt.rows(), gtt.cols()) - ( right.MatrixU() * ( left.MatrixU().transpose()*right.MatrixU() ).inverse() ) * left.MatrixU().transpose();
+                    }
+                    else if constexpr ( std::is_same_v< ScalarType, std::complex<double> > ) {
+                        gtt = Matrix<std::complex<double>>::Identity(gtt.rows(), gtt.cols()) - ( right.MatrixU() * ( left.MatrixU().adjoint()*right.MatrixU() ).inverse() ) * left.MatrixU().adjoint();
+                    }
+                    else {
+                        std::cerr << "Utils::NumericalStable::compute_equaltime_greens<QmcEngine>(): "
+                                  << "undefined scalar type in Utils::SvdStack<ScalarType>."
+                                  << std::endl;
+                        exit(1);
+                    }
+                }
+                else if constexpr ( std::is_same_v< QmcEngine, DQMC::DqmcEngine > ) {
+                    // todo
+                }
+                else {
+                    std::cerr << "Utils::NumericalStable::compute_equaltime_greens<QmcEngine>(): "
+                              << "undefined QmcEngine type."
+                              << std::endl;
+                    exit(1);
+                }
+            }
 
     };
 
-    template<>
-    void NumericalStable::compute_equaltime_greens<PQMC::PqmcEngine>( SvdStack& left, SvdStack& right, Matrix &gtt ){
-        // define L = P^\dag B(2\theta,t) = VSU^\dag ;
-        //        R = B(t,0) P = USV^\dag .
-        // L, R are in general rectangular matrices
-        gtt = Matrix::Identity(gtt.rows(), gtt.cols()) - ( right.MatrixU() * ( left.MatrixU().transpose()*right.MatrixU() ).inverse() ) * left.MatrixU().transpose();
-    }
-
-    template<>
-    void NumericalStable::compute_equaltime_greens<DQMC::DqmcEngine>( SvdStack& left, SvdStack& right, Matrix &gtt ){
-        // todo
-    }
 
 } // namespace Utils
 

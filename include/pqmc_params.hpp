@@ -19,7 +19,7 @@ namespace PQMC {
         
         int nt{};                   // imaginary-time slices
         double dt{};                // imaginary-time interval
-        double theta{};             // projection length in imaginary-time direction
+        double theta{};             // half of total projection length in imaginary-time direction ( 2theta = nt*dt )
 
         double t{};                 // nearest hopping
         double u{};                 // on-site Hubbard interaction

@@ -18,10 +18,11 @@ namespace PQMC { class PqmcEngine; struct PqmcParams; }
 
 namespace Model{
 
-    using HoppingMat       = Eigen::MatrixXd;
-    using ProjectionMat    = Eigen::MatrixXd;
-    using InteractionMat   = Eigen::MatrixXd;
-    using GreensFunction   = Eigen::MatrixXd;
+    using ScalarType       = double;
+    using HoppingMat       = Eigen::Matrix<ScalarType, Eigen::Dynamic, Eigen::Dynamic>;
+    using ProjectionMat    = Eigen::Matrix<ScalarType, Eigen::Dynamic, Eigen::Dynamic>;
+    using InteractionMat   = Eigen::Matrix<ScalarType, Eigen::Dynamic, Eigen::Dynamic>;
+    using GreensFunction   = Eigen::Matrix<ScalarType, Eigen::Dynamic, Eigen::Dynamic>;
     using SpaceTimeLattice = Eigen::MatrixXd;
 
     using timeIndex  = int;
@@ -50,12 +51,13 @@ namespace Model{
 
             void update_ising_field         ( timeIndex t, spaceIndex i );
             void update_greens_function     ( PQMC::PqmcEngine& engine, timeIndex t, spaceIndex i );
-            const double get_updating_ratio ( const PQMC::PqmcEngine& engine, timeIndex t, spaceIndex i, spinIndex s ) const ;
+            const double get_updating_ratio ( const PQMC::PqmcEngine& engine, timeIndex t, spaceIndex i ) const ;
 
             void multiply_B_from_left       ( GreensFunction& green, timeIndex t, spinIndex s ) const ;
             void multiply_B_from_right      ( GreensFunction& green, timeIndex t, spinIndex s ) const ;
             void multiply_invB_from_left    ( GreensFunction& green, timeIndex t, spinIndex s ) const ;
             void multiply_invB_from_right   ( GreensFunction& green, timeIndex t, spinIndex s ) const ;
+            void multiply_transB_from_left  ( GreensFunction& green, timeIndex t, spinIndex s ) const ;
     };
 
 } // namespace Model

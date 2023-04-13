@@ -21,8 +21,11 @@ namespace PQMC {
 
     struct PqmcParams;
 
-    using GreensFunction = Eigen::MatrixXd;
-    using ProjectionMat  = Eigen::MatrixXd;
+    using ScalarType     = double;
+    using GreensFunction = Eigen::Matrix<ScalarType, Eigen::Dynamic, Eigen::Dynamic>;
+    using ProjectionMat  = Eigen::Matrix<ScalarType, Eigen::Dynamic, Eigen::Dynamic>;
+    using SvdStack       = Utils::SvdStack<ScalarType>;
+    using timeIndex      = int;
 
     class PqmcEngine {
         public:
@@ -33,7 +36,7 @@ namespace PQMC {
             int    m_ns{};
             int    m_np{};
             int    m_stabilization_pace{};
-            int    m_current_time_slice{0};
+            int    m_current_time_slice{};
 
             GreensFunction* m_green_tt_up{};
             GreensFunction* m_green_tt_dn{};
@@ -44,14 +47,22 @@ namespace PQMC {
 
             ProjectionMat m_projection_mat{};
 
-            Utils::SvdStackReal* m_svd_stack_left_up{};
-            Utils::SvdStackReal* m_svd_stack_left_dn{};
-            Utils::SvdStackReal* m_svd_stack_right_up{};
-            Utils::SvdStackReal* m_svd_stack_right_dn{};
+            SvdStack* m_svd_stack_left_up{};
+            SvdStack* m_svd_stack_left_dn{};
+            SvdStack* m_svd_stack_right_up{};
+            SvdStack* m_svd_stack_right_dn{};
 
             double m_wrap_error{};
 
             void initial( const PqmcParams& params, const Model::Hubbard& model );
+
+            void metropolis_update( Model::Hubbard& model, timeIndex t );
+
+            void wrap_from_0_to_2theta( Model::Hubbard& model, timeIndex t );
+            void wrap_from_2theta_to_0( Model::Hubbard& model, timeIndex t );
+
+            void sweep_from_0_to_2theta( Model::Hubbard& model );
+            void sweep_from_2theta_to_0( Model::Hubbard& model );
 
     };
 
