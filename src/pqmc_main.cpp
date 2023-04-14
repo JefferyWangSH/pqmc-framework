@@ -11,6 +11,7 @@
 #include "model.h"
 #include "pqmc_engine.h"
 #include "pqmc_walker.h"
+#include "measure_handler.h"
 #include "pqmc_params.hpp"
 #include "random.h"
 // #include "utils/numerical_stable.hpp"
@@ -21,9 +22,11 @@ int main() {
 
     Model::Hubbard* hubbard = new Model::Hubbard();
     PQMC::PqmcEngine* engine = new PQMC::PqmcEngine();
+    Measure::MeasureHandler* handler = new Measure::MeasureHandler();
 
     PQMC::PqmcParams* params = new PQMC::PqmcParams();
     params->nl = 4;
+    params->ns = params->nl*params->nl;
     params->np = params->nl*params->nl;    // half-filling
     params->nt = 80;
     params->dt = 0.05;
@@ -35,6 +38,12 @@ int main() {
     params->bin_num = 100;
     params->bin_capacity = 20;
     params->sweeps_between_bins = 20;
+    params->obs_list = { "DoubleOccupation", };
+    params->momentum = 0;
+    params->momentum_list = { 0 };
+    params->beta = 1.0;
+    params->ntm = 40;
+
 
     Utils::Random::set_seed( time(nullptr) );
     hubbard->initial( *params );
@@ -45,7 +54,7 @@ int main() {
     // std::cout << "\n" << hubbard->m_ising_fields << std::endl;
 
 
-    engine->initial( *params, *hubbard );    
+    engine->initial( *params, *hubbard );
 //     engine->metropolis_update( *hubbard, params->nt-1 );
 //     Eigen::MatrixXd mat1 = *(engine->m_green_tt_up);
     
@@ -53,7 +62,11 @@ int main() {
 //         engine->sweep_from_0_to_2theta( *hubbard );
 //         engine->sweep_from_2theta_to_0( *hubbard );
 //     }
-    PQMC::PqmcWalker::thermalize( *engine, *hubbard );
+    
+    handler->initial( *params );
+    PQMC::PqmcWalker::thermalize( *engine, *hubbard, *handler );
+    PQMC::PqmcWalker::measure( *engine, *hubbard, *handler );
+    PQMC::PqmcWalker::analyse( *handler );
     std::cout << engine->m_wrap_error << std::endl;
     
 //     PQMC::PqmcEngine* engine2 = new PQMC::PqmcEngine();

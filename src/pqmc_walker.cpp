@@ -9,6 +9,7 @@
 #include "pqmc_walker.h"
 #include "pqmc_engine.h"
 #include "model.h"
+#include "measure_handler.h"
 #include "utils/progress_bar.hpp"
 
 namespace PQMC {
@@ -52,55 +53,119 @@ namespace PQMC {
     //
     // ----------------------------------------------------------------------------------------------------------------------
 
-    void PqmcWalker::sweep_forth_and_back( PqmcEngine& engine, Model::Hubbard& model )
+    void PqmcWalker::sweep_forth_and_back( PqmcEngine& engine, Model::Hubbard& model, Measure::MeasureHandler& meas_handler )
     {
+        // sweep forth from 0 to 2theta
         engine.sweep_from_0_to_2theta( model );
+        if ( meas_handler.isEqualTime() ) {
+            meas_handler.equaltime_measure( engine, model );
+        }
+
+        // sweep back from 2theta to 0
         engine.sweep_from_2theta_to_0( model );
+        if ( meas_handler.isEqualTime() ) {
+            meas_handler.equaltime_measure( engine, model );
+        }
     }
     
 
-    void PqmcWalker::thermalize( PqmcEngine& engine, Model::Hubbard& model )
+    void PqmcWalker::thermalize( PqmcEngine& engine, Model::Hubbard& model, const Measure::MeasureHandler& meas_handler )
     {
-        // create progress bar
-        progresscpp::ProgressBar progressbar( 100,                                            // total loops 
-                                              PqmcWalker::m_progress_bar_width,               // bar width
-                                              PqmcWalker::m_progress_bar_complete_char,       // complete character
-                                              PqmcWalker::m_progress_bar_incomplete_char      // incomplete character
-                                            );
+        if ( meas_handler.isWarmUp() ) {
 
-        // display the progress bar
-        if ( PqmcWalker::m_show_progress_bar ) {
-            std::cout << " Warming up "; progressbar.display();
-        }
+            // create progress bar
+            progresscpp::ProgressBar progressbar( std::ceil(meas_handler.WarmUpSweeps()/2),       // total loops 
+                                                  PqmcWalker::m_progress_bar_width,               // bar width
+                                                  PqmcWalker::m_progress_bar_complete_char,       // complete character
+                                                  PqmcWalker::m_progress_bar_incomplete_char      // incomplete character
+                                                );
 
-        for ( auto sweep = 1; sweep <= 100; ++sweep ) {
-            // sweep forth and back without measurments
-            engine.sweep_from_0_to_2theta( model );
-            engine.sweep_from_2theta_to_0( model );
-
-            // record the tick
-            ++progressbar;
-            if ( PqmcWalker::m_show_progress_bar && ( sweep % PqmcWalker::m_refresh_rate == 0 ) ) {
+            // display the progress bar
+            if ( PqmcWalker::m_show_progress_bar ) {
                 std::cout << " Warming up "; progressbar.display();
             }
+
+            for ( auto sweep = 1; sweep <= std::ceil(meas_handler.WarmUpSweeps()/2); ++sweep ) {
+                // sweep forth and back without measurments
+                engine.sweep_from_0_to_2theta( model );
+                engine.sweep_from_2theta_to_0( model );
+
+                // record the tick
+                ++progressbar;
+                if ( PqmcWalker::m_show_progress_bar && ( sweep % PqmcWalker::m_refresh_rate == 0 ) ) {
+                    std::cout << " Warming up "; progressbar.display();
+                }
+            }
+                
+            // progress bar finish
+            if ( PqmcWalker::m_show_progress_bar ) {
+                std::cout << " Warming up "; progressbar.done();
+            }
         }
+    }
+
+
+    void PqmcWalker::measure( PqmcEngine& engine, Model::Hubbard& model, Measure::MeasureHandler& meas_handler )
+    {
+        if ( meas_handler.isEqualTime() || meas_handler.isDynamic() ) {
             
-        // progress bar finish
-        if ( PqmcWalker::m_show_progress_bar ) {
-            std::cout << " Warming up "; progressbar.done();
+            // create progress bar
+            const int total_ticks = meas_handler.BinNum() * ( std::ceil(meas_handler.BinCapacity()/2) + std::ceil(meas_handler.SweepsBetweenBins()/2) );
+            progresscpp::ProgressBar progressbar( total_ticks,
+                                                  PqmcWalker::m_progress_bar_width,
+                                                  PqmcWalker::m_progress_bar_complete_char,
+                                                  PqmcWalker::m_progress_bar_incomplete_char
+                                                );
+            
+            // display the progress bar
+            if ( PqmcWalker::m_show_progress_bar ) {
+                std::cout << " Measuring  "; progressbar.display();
+            }
+
+            for ( auto bin = 0; bin < meas_handler.BinNum(); ++bin ) {
+                // avoid correlations between adjoining bins
+                for ( auto sweep = 1; sweep <= std::ceil(meas_handler.SweepsBetweenBins()/2); ++sweep ) {
+                    engine.sweep_from_0_to_2theta( model );
+                    engine.sweep_from_2theta_to_0( model );
+                    
+                    // record the tick
+                    ++progressbar;
+                    const int current_tick = sweep + bin * ( std::ceil(meas_handler.BinCapacity()/2) + std::ceil(meas_handler.SweepsBetweenBins()/2) );
+                    if ( PqmcWalker::m_show_progress_bar && ( current_tick % PqmcWalker::m_refresh_rate == 0 ) ) {
+                        std::cout << " Measuring  "; progressbar.display();
+                    }
+                }
+
+                for ( auto sweep = 1; sweep <= std::ceil(meas_handler.BinCapacity()/2); ++sweep ) {
+                    // update and measure
+                    PqmcWalker::sweep_forth_and_back( engine, model, meas_handler );
+
+                    // record the tick
+                    ++progressbar;
+                    const int current_tick = sweep + bin * std::ceil(meas_handler.BinCapacity()/2) + (bin+1) * std::ceil(meas_handler.SweepsBetweenBins()/2);
+                    if ( PqmcWalker::m_show_progress_bar && ( current_tick % PqmcWalker::m_refresh_rate == 0 ) ) {
+                        std::cout << " Measuring  "; progressbar.display();
+                    }
+                }
+
+                // store the collected data in the MeasureHandler
+                meas_handler.normalize_stats();
+                meas_handler.write_stats_to_bins( bin );
+                meas_handler.clear_temporary();
+            }
+
+            // progress bar finish
+            if ( PqmcWalker::m_show_progress_bar ) {
+                std::cout << " Measuring  "; progressbar.done();
+            }
         }
     }
 
 
-    void PqmcWalker::measure( PqmcEngine& engine, Model::Hubbard& model )
+    void PqmcWalker::analyse( Measure::MeasureHandler& meas_handler )
     {
-
-    }
-
-
-    void PqmcWalker::analyse()
-    {
-
+        // analyse the collected data after the measuring process
+        meas_handler.analyse_stats();
     }
 
 

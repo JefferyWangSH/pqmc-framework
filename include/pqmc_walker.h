@@ -13,6 +13,7 @@
 #include <chrono>
 
 namespace Model { class Hubbard; }
+namespace Measure { class MeasureHandler; }
 
 namespace PQMC {
 
@@ -30,9 +31,9 @@ namespace PQMC {
             static void timer_begin();
             static void timer_end();
 
-            static void thermalize( PqmcEngine& engine, Model::Hubbard& model );
-            static void measure( PqmcEngine& engine, Model::Hubbard& model );
-            static void analyse();
+            static void thermalize( PqmcEngine& engine, Model::Hubbard& model, const Measure::MeasureHandler& meas_handler );
+            static void measure( PqmcEngine& engine, Model::Hubbard& model, Measure::MeasureHandler& meas_handler );
+            static void analyse( Measure::MeasureHandler& meas_handler );
         
         private:
 
@@ -43,7 +44,7 @@ namespace PQMC {
 
             static std::chrono::steady_clock::time_point m_begin_time, m_end_time;
 
-            static void sweep_forth_and_back( PqmcEngine& engine, Model::Hubbard& model );
+            static void sweep_forth_and_back( PqmcEngine& engine, Model::Hubbard& model, Measure::MeasureHandler& meas_handler );
 
     };
 
