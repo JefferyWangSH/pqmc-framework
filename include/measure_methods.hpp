@@ -31,18 +31,50 @@ namespace Measure {
 
             static void measure_double_occupation ( Observable::ScalarObs& double_occupation,
                                                     const Measure::MeasureHandler& meas_handler,
-                                                    const PQMC::PqmcEngine& walker,
+                                                    const PQMC::PqmcEngine& engine,
                                                     const Model::Hubbard& model                  )
             {
-                
+                const int ntm = engine.m_ntm;
+                const int ns = engine.m_ns;
+
+                for ( auto t = 0; t < ntm; ++t ) {
+                    const PQMC::GreensFunction& gu = (*engine.m_vec_green_tt_up)[t];
+                    const PQMC::GreensFunction& gd = (*engine.m_vec_green_tt_dn)[t];
+
+                    double temp_double_occupation = 0.0;
+                    for ( auto i = 0; i < ns; ++i ) {
+                        temp_double_occupation += ( 1.0 - gu(i,i) ) * ( 1.0 - gd(i,i) );
+                    }
+                    double_occupation.temp_value() += temp_double_occupation / ns;
+                    ++double_occupation;
+                }
             }
 
             static void measure_kinetic_energy    ( Observable::ScalarObs& kinetic_energy,
                                                     const Measure::MeasureHandler& meas_handler,
-                                                    const PQMC::PqmcEngine& walker,
+                                                    const PQMC::PqmcEngine& engine,
                                                     const Model::Hubbard& model                  )
             {
-                
+                const int ntm = engine.m_ntm;
+                const int nl = engine.m_nl;
+                const int ns = engine.m_ns;
+
+                for ( auto t = 0; t < ntm; ++t ) {
+                    const PQMC::GreensFunction& gu = (*engine.m_vec_green_tt_up)[t];
+                    const PQMC::GreensFunction& gd = (*engine.m_vec_green_tt_dn)[t];
+
+                    double temp_kinetic_energy = 0.0;
+                    for ( auto x = 0; x < nl; ++x ) {
+                        for ( auto y = 0; y < nl; ++y ) {
+                            const auto i = x + y * nl;
+                            const auto xplus1 = (x+1) % nl + y * nl;
+                            const auto yplus1 = x + ((y+1) % nl) * nl;
+                            temp_kinetic_energy += gu(i,xplus1) + gd(i,xplus1) + gu(i,yplus1) + gd(i,yplus1);
+                        }
+                    }
+                    kinetic_energy.temp_value() += 2 * model.m_t * temp_kinetic_energy / ns;
+                    ++kinetic_energy;
+                }
             }
 
 
@@ -52,7 +84,7 @@ namespace Measure {
 
             static void measure_greens_functions  ( Observable::MatrixObs& greens_functions, 
                                                     const Measure::MeasureHandler& meas_handler,
-                                                    const PQMC::PqmcEngine& walker,
+                                                    const PQMC::PqmcEngine& engine,
                                                     const Model::Hubbard& model                  )
             {
 
@@ -60,7 +92,7 @@ namespace Measure {
 
             static void measure_density_of_states ( Observable::VectorObs& density_of_states, 
                                                     const Measure::MeasureHandler& meas_handler,
-                                                    const PQMC::PqmcEngine& walker,
+                                                    const PQMC::PqmcEngine& engine,
                                                     const Model::Hubbard& model                  )
             {
 

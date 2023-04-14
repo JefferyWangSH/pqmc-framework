@@ -56,9 +56,15 @@ namespace PQMC {
     void PqmcWalker::sweep_forth_and_back( PqmcEngine& engine, Model::Hubbard& model, Measure::MeasureHandler& meas_handler )
     {
         // sweep forth from 0 to 2theta
-        engine.sweep_from_0_to_2theta( model );
-        if ( meas_handler.isEqualTime() ) {
-            meas_handler.equaltime_measure( engine, model );
+        if ( meas_handler.isDynamic() ) {
+            engine.sweep_for_dynamic_greens_function( model );
+            meas_handler.dynamic_measure( engine, model );
+        }
+        else {
+            engine.sweep_from_0_to_2theta( model );
+            if ( meas_handler.isEqualTime() ) {
+                meas_handler.equaltime_measure( engine, model );
+            }
         }
 
         // sweep back from 2theta to 0
@@ -84,6 +90,9 @@ namespace PQMC {
             if ( PqmcWalker::m_show_progress_bar ) {
                 std::cout << " Warming up "; progressbar.display();
             }
+
+            // warm-up sweeps
+            engine.set_thermalization( true );
 
             for ( auto sweep = 1; sweep <= std::ceil(meas_handler.WarmUpSweeps()/2); ++sweep ) {
                 // sweep forth and back without measurments
@@ -121,6 +130,9 @@ namespace PQMC {
             if ( PqmcWalker::m_show_progress_bar ) {
                 std::cout << " Measuring  "; progressbar.display();
             }
+
+            // measuring sweeps
+            engine.set_thermalization( false );
 
             for ( auto bin = 0; bin < meas_handler.BinNum(); ++bin ) {
                 // avoid correlations between adjoining bins
