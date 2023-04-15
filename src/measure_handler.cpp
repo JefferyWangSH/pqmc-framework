@@ -43,7 +43,7 @@ namespace Measure {
         this->m_bin_capacity = params.bin_capacity;
         this->m_sweeps_between_bins = params.sweeps_between_bins;
         
-        this->m_obs_list = params.obs_list;
+        this->m_observables = params.observables;
         this->m_momentum = params.momentum;
         this->m_momentum_list = params.momentum_list;
 

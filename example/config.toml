@@ -1,0 +1,33 @@
+## example config input
+## PQMC Coniguration File in TOML Format
+
+[HubbardModel]
+
+    t = 1.0                         # nearest hopping constant
+    u = 4.0                         # on-site Hubbard repulsive interaction
+
+[SquareLattice]
+
+    nl = 4                           # linear size of square lattice
+    np = 16                          # particle number
+    momentum = "MPoint"
+    momentum_list = "KstarsAll"
+
+[MonteCarlo]
+
+    theta = 5.0                     # half of the projection length
+    dt = 0.125                      # imaginary-time spacing
+    nt = 80                         # imaginary-time slices
+    stabilization_pace = 8          # pace of numerical stabilization
+
+[Measure]
+
+    beta = 1.25                     # projection length within which measurements are performed [theta-beta, theta+beta]
+    ntm = 20                        # imaginary-time slices in the measurement window
+
+    sweeps_warmup = 1000            # MonteCarlo sweeps for thermalization
+    bin_num = 50                    # number of measurement bins
+    bin_capacity = 50               # number of MonteCarlo samples in one bin
+    sweeps_between_bins = 50        # MonteCarlo sweeps between adjoining bins, for avoiding correlations among bins
+
+    observables = [ "DoubleOccupation" ]

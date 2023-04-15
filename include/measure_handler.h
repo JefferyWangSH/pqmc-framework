@@ -40,7 +40,7 @@ namespace Measure {
             int m_bin_capacity{};           // number of samples in one measuring bin
             int m_sweeps_between_bins{};    // number of the MC sweeps between two adjoining bins
 
-            ObsList m_obs_list{};           // list of observables to be measured
+            ObsList m_observables{};        // list of observables to be measured
             
             // lattice momentum for the momentum-dependent measurements
             MomentumIndex m_momentum{};

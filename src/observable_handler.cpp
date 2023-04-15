@@ -105,14 +105,14 @@ namespace Observable {
         this->deallocate();
 
         // check the validity of the input
-        if ( !this->check_validity( params.obs_list ) ) {
+        if ( !this->check_validity( params.observables ) ) {
             // unsupported observables found, throw errors
             std::cerr << "Observable::ObservableHandler::initial(): "
                       << "unsupported observable type from the input." << std::endl;
             exit(1);
         }
 
-        for ( const auto& obs_name : params.obs_list ) {
+        for ( const auto& obs_name : params.observables ) {
             // allocate memory for observables
             // caution that to this stage only properties like name or method is assigned.
             // other info, such as m_size_of_bin and the dimension of m_zero_elem,

@@ -8,8 +8,8 @@
  *   Both equal-time and dynamic measurements for fermionic ( or bosonic, if needed ) observables are supported.
  */
 
-#ifndef MEASURE_METHODS_H
-#define MEASURE_METHODS_H
+#ifndef MEASURE_METHODS_HPP
+#define MEASURE_METHODS_HPP
 #pragma once
 
 #include "observable.h"
@@ -102,4 +102,4 @@ namespace Measure {
 
 } // namespace Measure
 
-#endif // MEASURE_METHODS_H
+#endif // MEASURE_METHODS_HPP
