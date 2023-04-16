@@ -46,7 +46,7 @@ namespace Utils {
 
             
             template<class QmcEngine, typename ScalarType>
-            static void compute_equaltime_greens( SvdStack<ScalarType>& left, SvdStack<ScalarType>& right, Matrix<ScalarType>& gtt )
+            static void compute_equaltime_green_function( SvdStack<ScalarType>& left, SvdStack<ScalarType>& right, Matrix<ScalarType>& gtt )
             {
                 if constexpr ( std::is_same_v< QmcEngine, PQMC::PqmcEngine > ) {
                     // define L = P^\dag B(2\theta,t) = VSU^\dag ;
@@ -60,7 +60,7 @@ namespace Utils {
                         gtt = Matrix<std::complex<double>>::Identity(gtt.rows(), gtt.cols()) - ( right.MatrixU() * ( left.MatrixU().adjoint()*right.MatrixU() ).inverse() ) * left.MatrixU().adjoint();
                     }
                     else {
-                        std::cerr << "Utils::NumericalStable::compute_equaltime_greens<QmcEngine>(): "
+                        std::cerr << "Utils::NumericalStable::compute_equaltime_green_function<QmcEngine>(): "
                                   << "undefined scalar type in Utils::SvdStack<ScalarType>."
                                   << std::endl;
                         exit(1);
@@ -70,12 +70,31 @@ namespace Utils {
                     // todo
                 }
                 else {
-                    std::cerr << "Utils::NumericalStable::compute_equaltime_greens<QmcEngine>(): "
+                    std::cerr << "Utils::NumericalStable::compute_equaltime_green_function<QmcEngine>(): "
                               << "undefined QmcEngine type."
                               << std::endl;
                     exit(1);
                 }
             }
+
+
+            template<class QmcEngine, typename ScalarType>
+            static void compute_dynamic_green_function( SvdStack<ScalarType>& left, SvdStack<ScalarType>& right, Matrix<ScalarType>& gt0, Matrix<ScalarType>& g0t )
+            {
+                if constexpr ( std::is_same_v< QmcEngine, PQMC::PqmcEngine > ) {
+                    // todo
+                }
+                else if constexpr ( std::is_same_v< QmcEngine, DQMC::DqmcEngine > ) {
+                    // todo
+                }
+                else {
+                    std::cerr << "Utils::NumericalStable::compute_dynamic_green_function<QmcEngine>(): "
+                              << "undefined QmcEngine type."
+                              << std::endl;
+                    exit(1);
+                }
+            }
+
 
     };
 
