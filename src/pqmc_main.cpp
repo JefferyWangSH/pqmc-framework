@@ -182,9 +182,17 @@ int main( int argc, char* argv[] ) {
         PQMC::PqmcIO::output_observable_in_bins( outfile, handler->find<Observable::ScalarObs>("DoubleOccupation"), true );
         outfile.close();
 
+        outfile.open( output_path + "/dos.bins.out", std::ios::trunc );
+        PQMC::PqmcIO::output_observable_in_bins( outfile, handler->find<Observable::MatrixObs>("DensityOfStates"), true );
+        outfile.close();
+
         const auto ising_fields_out = ( ising_fields_file.empty() )? output_path + "/ising.fields" : ising_fields_file;
         outfile.open( ising_fields_out, std::ios::trunc );
         PQMC::PqmcIO::output_ising_fields( outfile, *model );
+        outfile.close();
+
+        outfile.open( output_path + "/tgrids.out", std::ios::trunc );
+        PQMC::PqmcIO::output_imaginary_time_grids( outfile, *engine );
         outfile.close();
     }
     

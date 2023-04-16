@@ -70,7 +70,7 @@ namespace PQMC {
                     //                                          Output MonteCarlo Params
                     // -----------------------------------------------------------------------------------------------------------------
                     ostream << "   MonteCarlo Params:\n\n"
-                            << fmt_param_double % "Projection length" % joiner % params.theta
+                            << fmt_param_double % "Projection length 'theta'" % joiner % params.theta
                             << fmt_param_int % "Imag-time slices" % joiner % params.nt
                             << fmt_param_double % "Imag-time spacing" % joiner % params.dt
                             << fmt_param_int % "Stabilization pace" % joiner % params.stabilization_pace
@@ -80,7 +80,7 @@ namespace PQMC {
                     //                                           Output Measuring Params
                     // -----------------------------------------------------------------------------------------------------------------
                     ostream << "   Measuring Params:\n\n"
-                            << fmt_param_double % "Measurement window" % joiner % params.beta
+                            << fmt_param_double % "Measurement window 'beta'" % joiner % params.beta
                             << fmt_param_int % "Imag-time slices for Meas." % joiner % params.ntm
                             << fmt_param_str % "Warm up" % joiner % bool2str( handler.isWarmUp() )
                             << fmt_param_str % "Equal-time measure" % joiner % bool2str( handler.isEqualTime() )
@@ -292,9 +292,22 @@ namespace PQMC {
 
 
             template< typename StreamType >
-            static void output_imaginary_time_grids( StreamType& ostream )
+            static void output_imaginary_time_grids( StreamType& ostream, const PqmcEngine& engine )
             {
-                // todo
+                if ( !ostream ) {
+                    std::cerr << "PQMC::PqmcIO::output_imaginary_time_grids(): "
+                              << "the ostream failed to work, check the input." << std::endl;
+                    exit(1);
+                }
+                else {
+                    // output the imaginary-time grids within measurement window
+                    boost::format fmt_tgrids_info("%| 20d|%| 20.5f|%| 20.5f|");
+                    boost::format fmt_tgrids("%| 20d|%| 20.10f|");
+                    ostream << fmt_tgrids_info % engine.m_ntm % (2*engine.m_beta) % engine.m_dt << std::endl;
+                    for ( auto t = 0; t < engine.m_ntm; ++t ) {
+                        ostream << fmt_tgrids % t % ( t * engine.m_dt ) << std::endl;
+                    }
+                }
             }
 
 

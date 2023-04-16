@@ -18,7 +18,7 @@
     theta = 5.0                     # half of the projection length
     dt = 0.125                      # imaginary-time spacing
     nt = 80                         # imaginary-time slices
-    stabilization_pace = 8          # pace of numerical stabilization
+    stabilization_pace = 10         # pace of numerical stabilization
 
 [Measure]
 
@@ -30,4 +30,4 @@
     bin_capacity = 50               # number of MonteCarlo samples in one bin
     sweeps_between_bins = 50        # MonteCarlo sweeps between adjoining bins, for avoiding correlations among bins
 
-    observables = [ "DoubleOccupation" ]
+    observables = [ "DoubleOccupation", "DensityOfStates" ]

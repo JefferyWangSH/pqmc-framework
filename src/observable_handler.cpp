@@ -167,13 +167,13 @@ namespace Observable {
 
             // ----------------------------------------  Density of states D(t)  -------------------------------------------
             if ( obs_name == "DensityOfStates" ) {
-                ptrVectorObs density_of_states = std::make_shared<VectorObs>();
+                ptrMatrixObs density_of_states = std::make_shared<MatrixObs>();
                 density_of_states->set_name_and_description( obs_name, "Density of states" );
                 density_of_states->add_method( Measure::Methods::measure_density_of_states );
-                density_of_states->set_zero_element( VectorType::Zero(params.ntm) );
+                density_of_states->set_zero_element( MatrixType::Zero(2, params.ntm) );     // two for su(2) fermion
                 density_of_states->set_number_of_bins( params.bin_num );
                 density_of_states->allocate();
-                this->m_dynamic_vector_obs.emplace_back( density_of_states );
+                this->m_dynamic_matrix_obs.emplace_back( density_of_states );
                 this->m_obs_map[obs_name] = std::static_pointer_cast<ObservableBase>( density_of_states );
             }
 

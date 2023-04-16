@@ -29,10 +29,10 @@ namespace Measure {
             //    1. Double Occupation D
             //    2. Kinetic Energy Ek
 
-            static void measure_double_occupation ( Observable::ScalarObs& double_occupation,
-                                                    const Measure::MeasureHandler& meas_handler,
-                                                    const PQMC::PqmcEngine& engine,
-                                                    const Model::Hubbard& model                  )
+            static void measure_double_occupation( Observable::ScalarObs& double_occupation,
+                                                   const Measure::MeasureHandler& handler,
+                                                   const PQMC::PqmcEngine& engine,
+                                                   const Model::Hubbard& model                  )
             {
                 const int ntm = engine.m_ntm;
                 const int ns = engine.m_ns;
@@ -50,10 +50,10 @@ namespace Measure {
                 }
             }
 
-            static void measure_kinetic_energy    ( Observable::ScalarObs& kinetic_energy,
-                                                    const Measure::MeasureHandler& meas_handler,
-                                                    const PQMC::PqmcEngine& engine,
-                                                    const Model::Hubbard& model                  )
+            static void measure_kinetic_energy( Observable::ScalarObs& kinetic_energy,
+                                                const Measure::MeasureHandler& handler,
+                                                const PQMC::PqmcEngine& engine,
+                                                const Model::Hubbard& model                  )
             {
                 const int ntm = engine.m_ntm;
                 const int nl = engine.m_nl;
@@ -82,20 +82,29 @@ namespace Measure {
             //    1. Momentum-resolved dynamic green's functions: G(k,t) = < c(k,t) * c^+(k,0) >
             //    2. Density of states on imaginary-time grids: D(t) = 1/N \sum i < c(i,t) * c^+(i,0) >
 
-            static void measure_greens_functions  ( Observable::MatrixObs& greens_functions, 
-                                                    const Measure::MeasureHandler& meas_handler,
-                                                    const PQMC::PqmcEngine& engine,
-                                                    const Model::Hubbard& model                  )
+            static void measure_greens_functions( Observable::MatrixObs& greens_functions, 
+                                                  const Measure::MeasureHandler& handler,
+                                                  const PQMC::PqmcEngine& engine,
+                                                  const Model::Hubbard& model                  )
             {
 
             }
 
-            static void measure_density_of_states ( Observable::VectorObs& density_of_states, 
-                                                    const Measure::MeasureHandler& meas_handler,
-                                                    const PQMC::PqmcEngine& engine,
-                                                    const Model::Hubbard& model                  )
+            static void measure_density_of_states( Observable::MatrixObs& density_of_states, 
+                                                   const Measure::MeasureHandler& handler,
+                                                   const PQMC::PqmcEngine& engine,
+                                                   const Model::Hubbard& model                  )
             {
+                const int ntm = engine.m_ntm;
+                const int ns = engine.m_ns;
 
+                for (auto t = 0; t < ntm; ++t) {
+                    const PQMC::GreensFunction& gt0up = (*engine.m_vec_green_t0_up)[t];
+                    const PQMC::GreensFunction& gt0dn = (*engine.m_vec_green_t0_dn)[t];
+                    density_of_states.temp_value()(0,t) += gt0up.trace() / ns;
+                    density_of_states.temp_value()(1,t) += gt0dn.trace() / ns;
+                }
+                ++density_of_states;
             }
 
     };
