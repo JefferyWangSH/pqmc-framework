@@ -32,7 +32,7 @@ namespace Measure {
             static void measure_double_occupation( Observable::ScalarObs& double_occupation,
                                                    const Measure::MeasureHandler& handler,
                                                    const PQMC::PqmcEngine& engine,
-                                                   const Model::Hubbard& model                  )
+                                                   const Model::Hubbard& model               )
             {
                 const int ntm = engine.m_ntm;
                 const int ns = engine.m_ns;
@@ -53,7 +53,7 @@ namespace Measure {
             static void measure_kinetic_energy( Observable::ScalarObs& kinetic_energy,
                                                 const Measure::MeasureHandler& handler,
                                                 const PQMC::PqmcEngine& engine,
-                                                const Model::Hubbard& model                  )
+                                                const Model::Hubbard& model             )
             {
                 const int ntm = engine.m_ntm;
                 const int nl = engine.m_nl;
@@ -82,18 +82,18 @@ namespace Measure {
             //    1. Momentum-resolved dynamic green's functions: G(k,t) = < c(k,t) * c^+(k,0) >
             //    2. Density of states on imaginary-time grids: D(t) = 1/N \sum i < c(i,t) * c^+(i,0) >
 
-            static void measure_greens_functions( Observable::MatrixObs& greens_functions, 
+            static void measure_greens_functions( Observable::MatrixObs& greens_functions,
                                                   const Measure::MeasureHandler& handler,
                                                   const PQMC::PqmcEngine& engine,
-                                                  const Model::Hubbard& model                  )
+                                                  const Model::Hubbard& model              )
             {
 
             }
 
-            static void measure_density_of_states( Observable::MatrixObs& density_of_states, 
+            static void measure_density_of_states( Observable::MatrixObs& density_of_states,
                                                    const Measure::MeasureHandler& handler,
                                                    const PQMC::PqmcEngine& engine,
-                                                   const Model::Hubbard& model                  )
+                                                   const Model::Hubbard& model               )
             {
                 const int ntm = engine.m_ntm;
                 const int ns = engine.m_ns;
@@ -105,6 +105,28 @@ namespace Measure {
                     density_of_states.temp_value()(1,t) += gt0dn.trace() / ns;
                 }
                 ++density_of_states;
+            }
+
+            static void projection_benchamrk_measure( Observable::VectorObs& projection_benchmark,
+                                                      const Measure::MeasureHandler& handler,
+                                                      const PQMC::PqmcEngine& engine,
+                                                      const Model::Hubbard& model                  )
+            {
+                const int ntm = engine.m_ntm;
+                const int ns = engine.m_ns;
+
+                for ( auto t = 0; t < ntm; ++t ) {
+                    const PQMC::GreensFunction& gu = (*engine.m_vec_green_tt_up)[t];
+                    const PQMC::GreensFunction& gd = (*engine.m_vec_green_tt_dn)[t];
+
+                    // e.g. measure the double occupation for various effective projection length.
+                    double temp_projection_benchmark = 0.0;
+                    for ( auto i = 0; i < ns; ++i ) {
+                        temp_projection_benchmark += ( 1.0 - gu(i,i) ) * ( 1.0 - gd(i,i) );
+                    }
+                    projection_benchmark.temp_value()(t) += temp_projection_benchmark / ns;
+                }
+                ++projection_benchmark;
             }
 
     };

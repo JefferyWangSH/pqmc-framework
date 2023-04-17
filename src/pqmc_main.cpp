@@ -175,17 +175,8 @@ int main( int argc, char* argv[] ) {
     // ----------------------------------------  Output measuring results  -----------------------------------------
 
     if ( rank == master ) {
-        PQMC::PqmcIO::output_observable( std::cout, handler->find<Observable::ScalarObs>("DoubleOccupation") );
-        
+
         std::ofstream outfile;
-        outfile.open( output_path + "/double_occu.bins.out", std::ios::trunc );
-        PQMC::PqmcIO::output_observable_in_bins( outfile, handler->find<Observable::ScalarObs>("DoubleOccupation"), true );
-        outfile.close();
-
-        outfile.open( output_path + "/dos.bins.out", std::ios::trunc );
-        PQMC::PqmcIO::output_observable_in_bins( outfile, handler->find<Observable::MatrixObs>("DensityOfStates"), true );
-        outfile.close();
-
         const auto ising_fields_out = ( ising_fields_file.empty() )? output_path + "/ising.fields" : ising_fields_file;
         outfile.open( ising_fields_out, std::ios::trunc );
         PQMC::PqmcIO::output_ising_fields( outfile, *model );
@@ -194,6 +185,33 @@ int main( int argc, char* argv[] ) {
         outfile.open( output_path + "/tgrids.out", std::ios::trunc );
         PQMC::PqmcIO::output_imaginary_time_grids( outfile, *engine );
         outfile.close();
+
+        if ( handler->find( "DoubleOccupation" ) ) {
+            PQMC::PqmcIO::output_observable( std::cout, handler->find<Observable::ScalarObs>("DoubleOccupation") );
+            outfile.open( output_path + "/double_occu.bins.out", std::ios::trunc );
+            PQMC::PqmcIO::output_observable_in_bins( outfile, handler->find<Observable::ScalarObs>("DoubleOccupation"), true );
+            outfile.close();
+        }        
+        
+        if ( handler->find( "KineticEnergy" ) ) {
+            PQMC::PqmcIO::output_observable( std::cout, handler->find<Observable::ScalarObs>("KineticEnergy") );
+            outfile.open( output_path + "/kinetic_energy.bins.out", std::ios::trunc );
+            PQMC::PqmcIO::output_observable_in_bins( outfile, handler->find<Observable::ScalarObs>("KineticEnergy"), true );
+            outfile.close();
+        }
+
+        if ( handler->find( "DensityOfStates" ) ) {
+            outfile.open( output_path + "/dos.bins.out", std::ios::trunc );
+            PQMC::PqmcIO::output_observable_in_bins( outfile, handler->find<Observable::MatrixObs>("DensityOfStates"), true );
+            outfile.close();
+        }
+
+        if ( handler->find( "ProjectionBenchmark" ) ) {
+            outfile.open( output_path + "/benchmark.out", std::ios::trunc );
+            PQMC::PqmcIO::output_observable( outfile, handler->find<Observable::VectorObs>("ProjectionBenchmark") );
+            outfile.close();
+        }
+        
     }
     
     return 0;

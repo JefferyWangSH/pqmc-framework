@@ -257,7 +257,7 @@ namespace PQMC {
                 // compute wrapping errors
                 Utils::NumericalStable::matrix_compare_error<ScalarType>( temp_green_tt_up, *this->m_green_tt_up, temp_wrap_error_tt_up );
                 Utils::NumericalStable::matrix_compare_error<ScalarType>( temp_green_tt_dn, *this->m_green_tt_dn, temp_wrap_error_tt_dn );
-                this->m_wrap_error = std::max( this->m_wrap_error, std::max(temp_wrap_error_tt_up, temp_wrap_error_tt_dn) );
+                this->m_equaltime_wrap_error = std::max( this->m_equaltime_wrap_error, std::max(temp_wrap_error_tt_up, temp_wrap_error_tt_dn) );
 
                 *this->m_green_tt_up = temp_green_tt_up;
                 *this->m_green_tt_dn = temp_green_tt_dn;
@@ -317,7 +317,7 @@ namespace PQMC {
                 // compute wrapping errors
                 Utils::NumericalStable::matrix_compare_error<ScalarType>( temp_green_tt_up, *this->m_green_tt_up, temp_wrap_error_tt_up );
                 Utils::NumericalStable::matrix_compare_error<ScalarType>( temp_green_tt_dn, *this->m_green_tt_dn, temp_wrap_error_tt_dn );
-                this->m_wrap_error = std::max( this->m_wrap_error, std::max(temp_wrap_error_tt_up, temp_wrap_error_tt_dn) );
+                this->m_equaltime_wrap_error = std::max( this->m_equaltime_wrap_error, std::max(temp_wrap_error_tt_up, temp_wrap_error_tt_dn) );
 
                 *this->m_green_tt_up = temp_green_tt_up;
                 *this->m_green_tt_dn = temp_green_tt_dn;
@@ -487,11 +487,11 @@ namespace PQMC {
                 // compute wrapping errors
                 Utils::NumericalStable::matrix_compare_error<ScalarType>( temp_green_t0_up, *this->m_green_t0_up, temp_wrap_error_t0_up );
                 Utils::NumericalStable::matrix_compare_error<ScalarType>( temp_green_t0_dn, *this->m_green_t0_dn, temp_wrap_error_t0_dn );
-                this->m_wrap_error = std::max( this->m_wrap_error, std::max(temp_wrap_error_t0_up, temp_wrap_error_t0_dn) );
+                this->m_dynamic_wrap_error = std::max( this->m_dynamic_wrap_error, std::max(temp_wrap_error_t0_up, temp_wrap_error_t0_dn) );
 
                 Utils::NumericalStable::matrix_compare_error<ScalarType>( temp_green_0t_up, *this->m_green_0t_up, temp_wrap_error_0t_up );
                 Utils::NumericalStable::matrix_compare_error<ScalarType>( temp_green_0t_dn, *this->m_green_0t_dn, temp_wrap_error_0t_dn );
-                this->m_wrap_error = std::max( this->m_wrap_error, std::max(temp_wrap_error_0t_up, temp_wrap_error_0t_dn) );
+                this->m_dynamic_wrap_error = std::max( this->m_dynamic_wrap_error, std::max(temp_wrap_error_0t_up, temp_wrap_error_0t_dn) );
 
                 *this->m_green_t0_up = temp_green_t0_up;
                 *this->m_green_t0_dn = temp_green_t0_dn;

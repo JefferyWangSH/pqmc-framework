@@ -16,18 +16,18 @@
 [MonteCarlo]
 
     theta = 5.0                     # half of the projection length
-    dt = 0.125                      # imaginary-time spacing
-    nt = 80                         # imaginary-time slices
+    dt = 0.05                       # imaginary-time spacing
+    nt = 200                        # imaginary-time slices
     stabilization_pace = 10         # pace of numerical stabilization
 
 [Measure]
 
     beta = 1.25                     # projection length within which measurements are performed [theta-beta, theta+beta]
-    ntm = 20                        # imaginary-time slices in the measurement window
+    ntm = 50                        # imaginary-time slices in the measurement window
 
     sweeps_warmup = 1000            # MonteCarlo sweeps for thermalization
     bin_num = 50                    # number of measurement bins
     bin_capacity = 50               # number of MonteCarlo samples in one bin
     sweeps_between_bins = 50        # MonteCarlo sweeps between adjoining bins, for avoiding correlations among bins
 
-    observables = [ "DoubleOccupation", "DensityOfStates" ]
+    observables = [ "DoubleOccupation", "KineticEnergy", "DensityOfStates", "ProjectionBenchmark", ]

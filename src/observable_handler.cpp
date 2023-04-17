@@ -25,6 +25,7 @@ namespace Observable {
     ObsTable ObservableHandler::m_dynamic_obs_table = {
                                     "GreensFunctions",
                                     "DensityOfStates",
+                                    "ProjectionBenchmark",
                                 };
 
     // public member for external calls
@@ -33,6 +34,7 @@ namespace Observable {
                                     "KineticEnergy",
                                     "GreensFunctions",
                                     "DensityOfStates",
+                                    "ProjectionBenchmark",
                                 };
 
 
@@ -175,6 +177,18 @@ namespace Observable {
                 density_of_states->allocate();
                 this->m_dynamic_matrix_obs.emplace_back( density_of_states );
                 this->m_obs_map[obs_name] = std::static_pointer_cast<ObservableBase>( density_of_states );
+            }
+
+            // -------------------------------------  Projection length benchmark  -----------------------------------------
+            if ( obs_name == "ProjectionBenchmark" ) {
+                ptrVectorObs projection_benchmark = std::make_shared<VectorObs>();
+                projection_benchmark->set_name_and_description( obs_name, "Projection benchmark" );
+                projection_benchmark->add_method( Measure::Methods::projection_benchamrk_measure );
+                projection_benchmark->set_zero_element( VectorType::Zero( params.ntm ) );
+                projection_benchmark->set_number_of_bins( params.bin_num );
+                projection_benchmark->allocate();
+                this->m_dynamic_vector_obs.emplace_back( projection_benchmark );
+                this->m_obs_map[obs_name] = std::static_pointer_cast<ObservableBase>( projection_benchmark );
             }
 
             // add new methods here

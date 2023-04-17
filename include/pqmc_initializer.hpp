@@ -37,7 +37,7 @@ namespace PQMC {
                 // ---------------------------------------------------------------------------------------------------------------------------
                 
                 params.t = config["HubbardModel"]["t"].value_or(1.0);
-                params.u = config["HubbardModel"]["U"].value_or(4.0);
+                params.u = config["HubbardModel"]["u"].value_or(4.0);
                 params.nl = config["SquareLattice"]["nl"].value_or(4);
                 params.ns = params.nl * params.nl;
                 params.np = config["SquareLattice"]["np"].value_or(16);
@@ -84,6 +84,18 @@ namespace PQMC {
                               << "imag-time slices `ntm` in measurement window should be even. ( beta/dt = ntm/2 belongs to Z )"
                               << std::endl;
                     exit(1);
+                }
+                if ( params.beta > params.theta ) {
+                    std::cerr << "PQMC::PqmcInitializer::parse_toml_config(): " 
+                              << "measurement window `beta` exceeds the maximum of projection length `theta`."
+                              << std::endl;
+                    exit(1);    
+                }
+                if ( params.ntm > params.nt ) {
+                    std::cerr << "PQMC::PqmcInitializer::parse_toml_config(): " 
+                              << "imag-time slices `ntm` in measurement window exceeds the total slice number `nt`."
+                              << std::endl;
+                    exit(1);    
                 }
                 
                 // ---------------------------------------------------------------------------------------------------------------------------

@@ -1,0 +1,33 @@
+## example config input
+## PQMC Coniguration File in TOML Format
+
+[HubbardModel]
+
+    t = 1.0
+    u = 4.0
+
+[SquareLattice]
+
+    nl = 4
+    np = 16                          # particle number
+    momentum = "MPoint"
+    momentum_list = "KstarsAll"
+
+[MonteCarlo]
+
+    theta = 5.0
+    dt = 0.05
+    nt = 200
+    stabilization_pace = 10
+
+[Measure]
+
+    beta = 1.25
+    ntm = 50
+
+    sweeps_warmup = 1000
+    bin_num = 2000
+    bin_capacity = 50
+    sweeps_between_bins = 50
+
+    observables = [ "DoubleOccupation", "KineticEnergy" ]

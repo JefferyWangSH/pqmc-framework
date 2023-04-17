@@ -81,7 +81,8 @@ namespace PQMC {
             bool m_is_equaltime{};              // whether to perform the equal-time measurements
             bool m_is_dynamic{};                // whether to perform the dynamic measurements
 
-            double m_wrap_error{0.0};
+            double m_equaltime_wrap_error{0.0};
+            double m_dynamic_wrap_error{0.0};
 
         public:
         

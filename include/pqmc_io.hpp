@@ -118,7 +118,9 @@ namespace PQMC {
                     else { ostream << boost::format("\n>> The simulation finished in %.2f s.\n") % sec << std::endl; }
 
                     // output wrapping errors of the evaluations of Green's functions
-                    ostream << boost::format(">> Maximum of the wrapping error: %.5e\n") % engine.m_wrap_error << std::endl;
+                    ostream << boost::format(">> Maximum of the wrapping error (equal-time): %.5e\n") % engine.m_equaltime_wrap_error;
+                    if ( engine.m_is_dynamic ) { ostream << boost::format("   Maximum of the wrapping error (dynamic)   : %.5e\n") % engine.m_dynamic_wrap_error; }
+                    ostream << std::endl;
                 }
             }
 
