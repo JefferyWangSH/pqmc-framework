@@ -73,9 +73,6 @@ namespace PQMC {
             ptrSvdStack m_svd_stack_right_up{};
             ptrSvdStack m_svd_stack_right_dn{};
 
-            ptrSvdStack m_svd_stack_dynamic_up{};
-            ptrSvdStack m_svd_stack_dynamic_dn{};
-
             // bool parameters
             bool m_is_thermalization{};         // whether the MC simulation is in the thermalization phase
             bool m_is_equaltime{};              // whether to perform the equal-time measurements

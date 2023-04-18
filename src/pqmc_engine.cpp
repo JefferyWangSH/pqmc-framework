@@ -12,6 +12,7 @@
 #include "random.h"
 #include "pqmc_params.hpp"
 #include "utils/numerical_stable.hpp"
+#include "utils/linear_algebra.hpp"
 
 #define EIGEN_USE_MKL_ALL
 #define EIGEN_VECTORIZE_SSE4_2
@@ -48,8 +49,6 @@ namespace PQMC {
         if ( this->m_svd_stack_left_dn ) { this->m_svd_stack_left_dn.reset(); }
         if ( this->m_svd_stack_right_up ) { this->m_svd_stack_right_up.reset(); }
         if ( this->m_svd_stack_right_dn ) { this->m_svd_stack_right_dn.reset(); }
-        if ( this->m_svd_stack_dynamic_up ) { this->m_svd_stack_dynamic_up.reset(); }
-        if ( this->m_svd_stack_dynamic_dn ) { this->m_svd_stack_dynamic_dn.reset(); }
         if ( this->m_green_tt_up ) { this->m_green_tt_up.reset(); }
         if ( this->m_green_tt_dn ) { this->m_green_tt_dn.reset(); }
         if ( this->m_green_t0_up ) { this->m_green_t0_up.reset(); }
@@ -68,10 +67,6 @@ namespace PQMC {
         this->m_svd_stack_left_dn  = std::make_unique<SvdStack>( std::array<int,2>({this->m_ns, this->m_np/2}), this->m_nt, this->m_projection_mat );
         this->m_svd_stack_right_up = std::make_unique<SvdStack>( std::array<int,2>({this->m_ns, this->m_np/2}), this->m_nt, this->m_projection_mat );
         this->m_svd_stack_right_dn = std::make_unique<SvdStack>( std::array<int,2>({this->m_ns, this->m_np/2}), this->m_nt, this->m_projection_mat );
-        if ( this->m_is_dynamic ) {
-            this->m_svd_stack_dynamic_up = std::make_unique<SvdStack>( std::array<int,2>({this->m_ns, this->m_ns}), this->m_ntm, MatrixStack::Identity(this->m_ns, this->m_ns) );
-            this->m_svd_stack_dynamic_dn = std::make_unique<SvdStack>( std::array<int,2>({this->m_ns, this->m_ns}), this->m_ntm, MatrixStack::Identity(this->m_ns, this->m_ns) );
-        }
 
         // allocate memories for green's functions
         this->m_green_tt_up = std::make_unique<GreensFunction>( this->m_ns, this->m_ns );
@@ -440,7 +435,7 @@ namespace PQMC {
         (*this->m_vec_green_t0_dn)[0] = *this->m_green_t0_dn;
         (*this->m_vec_green_0t_up)[0] = *this->m_green_0t_up;
         (*this->m_vec_green_0t_dn)[0] = *this->m_green_0t_dn;
-        
+
         for ( auto t = 1; t < this->m_ntm; ++t ) {
             const int it = (this->m_nt - this->m_ntm)/2 + t;
 
@@ -455,19 +450,18 @@ namespace PQMC {
             model.multiply_B_from_left( b_stack_up, it, +1 );
             model.multiply_B_from_left( b_stack_dn, it, -1 );
 
-            // perform the stabilizations
+            // incremental determination of time-displaced green's function, see Phys. Rev. B 63, 073105
+            // noting that G(t,t) is a projector and using the identity G(t3,t1) = G(t3,t2) G(t2,t1)
             if ( t % this->m_stabilization_pace == 0 ) {
-                this->m_svd_stack_dynamic_up->push( b_stack_up );
-                this->m_svd_stack_dynamic_dn->push( b_stack_dn );
 
-                const uMatrix uMatUp = this->m_svd_stack_dynamic_up->MatrixU();
-                const vMatrix vMatUp = this->m_svd_stack_dynamic_up->MatrixV();
-                const dVector sVecUp = this->m_svd_stack_dynamic_up->SingularValues();
-                const dVector sVecUpInv = ( 1.0/this->m_svd_stack_dynamic_up->SingularValues().array() ).matrix();
-                const uMatrix uMatDn = this->m_svd_stack_dynamic_dn->MatrixU();
-                const vMatrix vMatDn = this->m_svd_stack_dynamic_dn->MatrixV();
-                const dVector sVecDn = this->m_svd_stack_dynamic_dn->SingularValues();
-                const dVector sVecDnInv = ( 1.0/this->m_svd_stack_dynamic_dn->SingularValues().array() ).matrix();
+                uMatrix uMatUp, uMatDn;
+                vMatrix vMatUp, vMatDn;
+                dVector sVecUp, sVecDn, sVecUpInv, sVecDnInv;
+
+                Utils::LinearAlgebra::mkl_lapack_dgesvd( this->m_ns, this->m_ns, b_stack_up, uMatUp, sVecUp, vMatUp );
+                Utils::LinearAlgebra::mkl_lapack_dgesvd( this->m_ns, this->m_ns, b_stack_dn, uMatDn, sVecDn, vMatDn );
+                sVecUpInv = ( 1.0/sVecUp.array() ).matrix();
+                sVecDnInv = ( 1.0/sVecDn.array() ).matrix();
 
                 // collect the wrapping errors
                 GreensFunction temp_green_t0_up( this->m_ns, this->m_ns );
@@ -479,10 +473,10 @@ namespace PQMC {
                 double temp_wrap_error_0t_up = 0.0;
                 double temp_wrap_error_0t_dn = 0.0;
 
-                temp_green_t0_up = ( uMatUp * sVecUp.asDiagonal() ) * ( vMatUp.transpose() * (*this->m_vec_green_t0_up)[0] );
-                temp_green_t0_dn = ( uMatDn * sVecDn.asDiagonal() ) * ( vMatDn.transpose() * (*this->m_vec_green_t0_dn)[0] );
-                temp_green_0t_up = ( (*this->m_vec_green_0t_up)[0] * vMatUp ) * ( sVecUpInv.asDiagonal() * uMatUp.transpose() );
-                temp_green_0t_dn = ( (*this->m_vec_green_0t_dn)[0] * vMatDn ) * ( sVecDnInv.asDiagonal() * uMatDn.transpose() );
+                temp_green_t0_up = ( uMatUp * sVecUp.asDiagonal() ) * ( vMatUp.transpose() * (*this->m_vec_green_t0_up)[t-this->m_stabilization_pace] );
+                temp_green_t0_dn = ( uMatDn * sVecDn.asDiagonal() ) * ( vMatDn.transpose() * (*this->m_vec_green_t0_dn)[t-this->m_stabilization_pace] );
+                temp_green_0t_up = ( (*this->m_vec_green_0t_up)[t-this->m_stabilization_pace] * vMatUp ) * ( sVecUpInv.asDiagonal() * uMatUp.transpose() );
+                temp_green_0t_dn = ( (*this->m_vec_green_0t_dn)[t-this->m_stabilization_pace] * vMatDn ) * ( sVecDnInv.asDiagonal() * uMatDn.transpose() );
 
                 // compute wrapping errors
                 Utils::NumericalStable::matrix_compare_error<ScalarType>( temp_green_t0_up, *this->m_green_t0_up, temp_wrap_error_t0_up );
@@ -507,9 +501,6 @@ namespace PQMC {
             (*this->m_vec_green_0t_up)[t] = *this->m_green_0t_up;
             (*this->m_vec_green_0t_dn)[t] = *this->m_green_0t_dn;
         }
-
-        this->m_svd_stack_dynamic_up->clear();
-        this->m_svd_stack_dynamic_dn->clear();
     }
 
 
